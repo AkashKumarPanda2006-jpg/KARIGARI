@@ -1,0 +1,93 @@
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token');
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'fallback-secret');
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (decoded.role !== 'ARTISAN') {
+      return NextResponse.json({ error: 'Forbidden. Artisan access required.' }, { status: 403 });
+    }
+
+    const artisanId = decoded.userId;
+
+    // Fetch user details
+    const user = await prisma.user.findUnique({
+      where: { id: artisanId }
+    });
+
+    // 1. My Captures (total count)
+    const myCapturesCount = await prisma.craftItem.count({
+      where: { artisanId }
+    });
+
+    // 2. Advances Received
+    const advances = await prisma.craftItem.aggregate({
+      _sum: { advancePaid: true },
+      where: { 
+        artisanId,
+        status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } 
+      }
+    });
+    const totalAdvances = advances._sum.advancePaid || 0;
+
+    // 3. Items Sold (SOLD_FINAL or SOLD_MIDDLEMAN)
+    const itemsSold = await prisma.craftItem.count({
+      where: { 
+        artisanId,
+        status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } 
+      }
+    });
+
+    // 4. Total Earnings
+    // Earnings = advancePaid + finalPayoutQueued (for platform items) 
+    // Wait, if it's SOLD_MIDDLEMAN, the platform didn't track the cash in the ledger.
+    // For simplicity, Total Earnings = sum of advancePaid + sum of finalPayoutQueued
+    const queued = await prisma.craftItem.aggregate({
+      _sum: { finalPayoutQueued: true },
+      where: { 
+        artisanId,
+        status: 'SOLD_FINAL'
+      }
+    });
+    const totalEarnings = totalAdvances + (queued._sum.finalPayoutQueued || 0);
+
+    // 5. Recent Captures (for table)
+    const recentCaptures = await prisma.craftItem.findMany({
+      where: { artisanId },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        artisanName: user?.name,
+        myCapturesCount,
+        totalAdvances,
+        itemsSold,
+        totalEarnings,
+        recentCaptures
+      }
+    });
+  } catch (error: any) {
+    console.error('Artisan Dashboard API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

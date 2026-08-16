@@ -1,0 +1,90 @@
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
+import { prisma } from '@/lib/prisma';
+import { logCraftItemEvent } from '@/lib/auditLogger';
+
+export async function POST(req: Request) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token');
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'fallback-secret');
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    if (decoded.role !== 'ARTISAN') {
+      return NextResponse.json({ error: 'Forbidden. Artisan access required.' }, { status: 403 });
+    }
+
+    const { itemId, selectedOption, assignedAdminId, patchId } = await req.json();
+
+    if (!itemId || !selectedOption) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const item = await prisma.craftItem.findUnique({
+      where: { id: itemId }
+    });
+
+    if (!item) {
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    }
+
+    if (item.artisanId !== decoded.userId) {
+      return NextResponse.json({ error: 'Forbidden. You do not own this item.' }, { status: 403 });
+    }
+
+    let newStatus = 'PENDING_DISBURSEMENT';
+    let advancePaid = 0;
+
+    if (selectedOption === 'MIDDLEMAN') {
+      newStatus = 'SOLD_MIDDLEMAN';
+      // Risk taken by artisan, cash paid immediately off-platform
+      advancePaid = 0; 
+    } else if (selectedOption === 'COOP_AUCTION') {
+      newStatus = 'LISTED_AUCTION';
+      // No advance, wait for sale
+      advancePaid = 0;
+    } else if (selectedOption === 'KARIGARI_ADVANCE') {
+      newStatus = 'ADVANCE_PAID'; // Paid instantly
+      // Cooperative pays the floor wage immediately as an advance
+      advancePaid = item.fairWageFloor || 0;
+    }
+
+    const dataToUpdate: any = {
+      status: newStatus,
+      advancePaid: advancePaid
+    };
+    if (assignedAdminId) dataToUpdate.assignedAdminId = assignedAdminId;
+    if (patchId) dataToUpdate.patchId = patchId;
+
+    const updatedItem = await prisma.craftItem.update({
+      where: { id: itemId },
+      data: dataToUpdate
+    });
+
+    await logCraftItemEvent({
+      prisma,
+      craftItemId: itemId,
+      actorId: decoded.userId,
+      actorRole: 'ARTISAN',
+      action: 'ITEM_MINTED_AND_SOLD',
+      previousState: { status: item.status },
+      newState: { status: newStatus, patchId: patchId },
+      comments: `Artisan selected ${selectedOption}. Received advance: ₹${advancePaid.toLocaleString()}. Patch ID: ${patchId} minted.`
+    });
+
+    return NextResponse.json({ success: true, item: updatedItem });
+  } catch (error: any) {
+    console.error('Disbursement Apply API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

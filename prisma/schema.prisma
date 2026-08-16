@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  ARTISAN
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  passwordHash   String
+  role           Role
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  artisanProfile ArtisanProfile?
+  craftItems     CraftItem[]
+}
+
+model ArtisanProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  craftType       String
+  location        String
+  experienceYears Int
+  cooperativeId   String?
+  photoUrl        String?
+  upiId           String?
+  description     String?
+  tags            String[]
+}
+
+model CraftItem {
+  id                  String   @id @default(uuid())
+  artisanId           String
+  artisan             User     @relation(fields: [artisanId], references: [id])
+  patchId             String?
+  craftType           String
+  descriptionOriginal String?
+  descriptionEnglish  String?
+  tags                String[]
+  images              String[]
+  rawMaterialProofUrl String?
+  rawMaterialCost     Float?
+  laborDays           Int?
+  fairnessScore       Float?
+  fairWageFloor       Float?
+  marketPriceMin      Float?
+  marketPriceMax      Float?
+  standardMarketPrice Float?
+  creditScore         Float?
+  status              String   @default("Pending")
+  advancePaid         Float    @default(0)
+  finalPayoutQueued   Float    @default(0)
+  salePrice           Float?
+  assignedAdminId     String?
+  createdAt           DateTime @default(now())
+
+  auditLogs           AuditLog[]
+}
+
+model AuditLog {
+  id            String    @id @default(uuid())
+  craftItemId   String
+  craftItem     CraftItem @relation(fields: [craftItemId], references: [id])
+  actorId       String?
+  actorRole     String
+  action        String
+  previousState Json?
+  newState      Json?
+  comments      String?
+  createdAt     DateTime  @default(now())
+}

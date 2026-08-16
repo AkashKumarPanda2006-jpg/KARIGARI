@@ -1,0 +1,629 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { Mic, UploadCloud, FileText, QrCode, ArrowRight, X, Sparkles, CheckCircle2, Camera, Trash2, ShieldCheck, Wallet } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { useLanguage } from "@/lib/translations";
+
+interface CaptureModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+type Message = { id: string; role: "assistant" | "user"; text: string; isProcessing?: boolean };
+
+export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
+  const router = useRouter();
+  const { t } = useLanguage();
+  const [step, setStep] = useState(1);
+  const [isListening, setIsListening] = useState(false);
+  const [isProcessed, setIsProcessed] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [isProcessingAI, setIsProcessingAI] = useState(false);
+  const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
+  
+  // Chat History
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      setMessages([{ id: '1', role: "assistant", text: t('assistant_intro') }]);
+    }
+  }, [isOpen, t, messages.length]);
+  
+  // Form Data extracted from Voice
+  const [originalTranscript, setOriginalTranscript] = useState<string>("");
+  const [laborDays, setLaborDays] = useState<number>(0);
+  const [rawMaterialCost, setRawMaterialCost] = useState<number>(0);
+  const [englishDescription, setEnglishDescription] = useState<string>("");
+  const [sourceLanguage, setSourceLanguage] = useState<string>("");
+  const [craftType, setCraftType] = useState<string>("");
+  
+  // Dual Camera State
+  const [images, setImages] = useState<string[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+
+  // Payment & Decision State
+  const [selectedOption, setSelectedOption] = useState<'middleman' | 'auction' | 'karigari'>('karigari');
+  const [upiId, setUpiId] = useState("sunita@upi");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [generatedPatchId, setGeneratedPatchId] = useState<string | null>(null);
+
+  // New ML and Admin features
+  const [isVerifyingVision, setIsVerifyingVision] = useState(false);
+  const [isVisionVerified, setIsVisionVerified] = useState(false);
+  const [admins, setAdmins] = useState<any[]>([]);
+  const [assignedAdminId, setAssignedAdminId] = useState<string>("");
+
+  const [isCreatingDraft, setIsCreatingDraft] = useState(false);
+  const [createdItemId, setCreatedItemId] = useState<string | null>(null);
+  
+  // Data for Step 6 breakdown
+  const [standardMarketPrice, setStandardMarketPrice] = useState<number>(0);
+  const [marketPriceMin, setMarketPriceMin] = useState<number>(0);
+  const [marketPriceMax, setMarketPriceMax] = useState<number>(0);
+  const [fairWageFloor, setFairWageFloor] = useState<number>(0);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isProcessingAI]);
+
+  useEffect(() => {
+    fetch('/api/users/admins').then(r => r.json()).then(d => {
+      if(d.success && d.admins.length > 0) {
+        setAdmins(d.admins);
+        setAssignedAdminId(d.admins[0].id);
+      }
+    });
+  }, []);
+
+  // AI Vision Verification
+  useEffect(() => {
+    if (images.length > 0 && !isVisionVerified && !isVerifyingVision && step === 2) {
+      setIsVerifyingVision(true);
+      fetch('/api/items/vision-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: images[0], description: englishDescription })
+      })
+      .then(res => res.json())
+      .then(data => {
+        setIsVerifyingVision(false);
+        if (data.success && data.data.isVerified) {
+          setIsVisionVerified(true);
+        } else {
+          alert("AI Vision Rejected: " + (data.data?.reasoning || 'Image does not match description.'));
+          setImages([]);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setIsVerifyingVision(false);
+        alert("Vision verification failed. Please try again.");
+        setImages([]);
+      });
+    }
+  }, [images, isVisionVerified, isVerifyingVision, step, englishDescription]);
+
+  // Auto create draft on Step 3 completion (Wait for save button)
+  const handleSaveUpload = async () => {
+    if (isCreatingDraft || createdItemId) return;
+    setIsCreatingDraft(true);
+    try {
+      const res = await fetch("/api/items/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          craftType: craftType || "Crafted Item",
+          laborDays: laborDays || 9,
+          rawMaterialCost: rawMaterialCost || 2800,
+          descriptionOriginal: originalTranscript || "Craft item description",
+          descriptionEnglish: englishDescription || "English description of craft",
+          tags: [craftType || "ArtisanCraft"],
+          images: images
+        })
+      });
+      
+      const data = await res.json();
+      if (res.ok && data.item?.id) {
+        setCreatedItemId(data.item.id);
+        setStep(4); // Use step 4 as the success screen
+      } else {
+        alert("Failed to save upload.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error saving upload.");
+    } finally {
+      setIsCreatingDraft(false);
+    }
+  };
+  
+  const toggleListening = () => {
+    if (isProcessed) return;
+
+    if (isListening && recognitionInstance) {
+      recognitionInstance.stop();
+      setIsListening(false);
+      return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Your browser does not support Speech Recognition.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'hi-IN'; // Uses Hindi engine but typically captures multiple regional languages accurately.
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    let currentTranscript = inputText;
+    if (currentTranscript && !currentTranscript.endsWith(" ")) {
+      currentTranscript += " ";
+    }
+
+    recognition.onstart = () => setIsListening(true);
+    
+    recognition.onresult = (event: any) => {
+      let interim = "";
+      let final = "";
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          final += event.results[i][0].transcript + " ";
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      if (final) currentTranscript += final;
+      setInputText(currentTranscript + interim);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech error:", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    setRecognitionInstance(recognition);
+    recognition.start();
+  };
+
+  const processWithAI = async () => {
+    if (!inputText.trim() || isProcessed) return;
+    
+    if (isListening && recognitionInstance) {
+      recognitionInstance.stop();
+      setIsListening(false);
+    }
+
+    const userMessage = inputText;
+    setMessages(prev => [...prev, { id: Date.now().toString(), role: "user", text: userMessage }]);
+    setInputText("");
+    setIsProcessingAI(true);
+    
+    try {
+      const res = await fetch("/api/items/voice-parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ regionalTranscript: userMessage })
+      });
+      const result = await res.json();
+      
+      if (res.ok && result.data) {
+        setOriginalTranscript(result.data.originalTranscript || userMessage);
+        setEnglishDescription(result.data.englishDescription);
+        setLaborDays(result.data.laborDays);
+        setRawMaterialCost(result.data.rawMaterialCost);
+        setSourceLanguage(result.data.sourceLanguage);
+        setCraftType(result.data.craftType || "Crafted Item");
+        setIsProcessed(true);
+      } else {
+        alert("AI parsing failed.");
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: "assistant", text: "Sorry, I couldn't understand that. Please try again." }]);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("AI processing failed. Please try again.");
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: "assistant", text: "Sorry, there was a network error." }]);
+    } finally {
+      setIsProcessingAI(false);
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setIsCameraActive(true);
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Camera access denied or not available.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setIsCameraActive(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen || step !== 2) {
+      stopCamera();
+    }
+  }, [isOpen, step]);
+
+  if (!isOpen) return null;
+
+  const captureFrame = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext("2d");
+      if (context) {
+        context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+        const dataUrl = canvasRef.current.toDataURL("image/png");
+        if (images.length < 4) {
+          setImages([...images, dataUrl]);
+        } else {
+          alert("Maximum 4 images allowed.");
+        }
+      }
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          if (images.length < 4) {
+            setImages([...images, event.target.result as string]);
+          } else {
+            alert("Maximum 4 images allowed.");
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+    setIsVisionVerified(false);
+  };
+
+
+  const handleNext = () => {
+    if (step < 3) {
+      setStep(step + 1);
+    }
+  };
+
+  const resetAndClose = () => {
+    onClose();
+    setTimeout(() => {
+      setStep(1);
+      setIsProcessed(false);
+      setImages([]);
+      setLaborDays(0);
+      setRawMaterialCost(0);
+      setIsVisionVerified(false);
+      setIsVerifyingVision(false);
+      setCreatedItemId(null);
+      setOriginalTranscript("");
+      setEnglishDescription("");
+      setSourceLanguage("");
+      setInputText("");
+      setMessages([]);
+      if (recognitionInstance) {
+        recognitionInstance.stop();
+      }
+    }, 500);
+  };
+  
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-fade-in-up">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div>
+            <h2 className="font-serif font-bold text-xl text-primary">{t('new_craft_capture')}</h2>
+            {step <= 3 && <p className="text-xs text-gray-500">Step {step} of 3</p>}
+          </div>
+          <button onClick={resetAndClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-8 flex-grow overflow-y-auto">
+          {/* Step 1: ChatGPT-style AI Input */}
+          {step === 1 && (
+            <div className="flex flex-col h-[500px] animate-fade-in-up bg-gray-50/50 rounded-2xl border border-gray-100 p-2 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                
+                {messages.map((msg) => (
+                  <div key={msg.id} className={cn("flex gap-4 max-w-[90%] animate-fade-in-up", msg.role === 'user' ? 'ml-auto flex-row-reverse' : '')}>
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1", msg.role === 'assistant' ? 'bg-primary' : 'bg-gray-200 overflow-hidden border border-gray-200')}>
+                      {msg.role === 'assistant' ? <Sparkles size={16} className="text-white" /> : <Image src="/female_artisan.jpg" alt="User" width={32} height={32} className="object-cover" />}
+                    </div>
+                    <div className={cn("p-4 rounded-2xl shadow-sm break-words", msg.role === 'assistant' ? 'bg-white rounded-tl-none border border-gray-100 text-gray-800 font-medium' : 'bg-primary rounded-tr-none text-white leading-relaxed whitespace-pre-wrap')}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+
+                {inputText && (
+                  <div className="flex gap-4 max-w-[90%] ml-auto flex-row-reverse animate-fade-in-up">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0 overflow-hidden mt-1 border border-gray-200">
+                      <Image src="/female_artisan.jpg" alt="User" width={32} height={32} className="object-cover" />
+                    </div>
+                    <div className="bg-primary p-4 rounded-2xl rounded-tr-none text-white shadow-sm break-words opacity-80">
+                      <p className="leading-relaxed whitespace-pre-wrap">{inputText}</p>
+                      {isListening && <span className="inline-block w-2 h-4 bg-white/70 animate-pulse ml-1 align-middle"></span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Processing Bubble */}
+                {isProcessingAI && (
+                  <div className="flex gap-4 max-w-[90%] animate-fade-in-up">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      </div>
+                      <span className="text-gray-500 text-sm font-medium">Gemini is parsing your craft...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Final Result Bubble */}
+                {isProcessed && (
+                  <div className="flex gap-4 max-w-[90%] animate-fade-in-up">
+                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0 mt-1 shadow-sm shadow-green-500/20">
+                      <CheckCircle2 size={16} className="text-white" />
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-green-200 shadow-sm space-y-3 w-full">
+                      <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                          <Sparkles size={12}/> Gemini Translation
+                        </span>
+                        {sourceLanguage && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md text-[10px] font-bold border border-gray-200">{sourceLanguage} Detected</span>}
+                      </div>
+                      <p className="text-md text-gray-800 font-medium leading-relaxed">{englishDescription}</p>
+                      
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <span className="px-3 py-1.5 bg-green-50 text-green-700 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-green-100">
+                          <Sparkles size={12} className="text-green-500" /> {laborDays} Days Labor
+                        </span>
+                        <span className="px-3 py-1.5 bg-green-50 text-green-700 text-xs font-bold rounded-lg flex items-center gap-1.5 border border-green-100">
+                          <Sparkles size={12} className="text-green-500" /> ₹{rawMaterialCost} Materials
+                        </span>
+                      </div>
+                      
+                      <p className="text-xs text-gray-400 mt-2 font-medium bg-gray-50 p-2 rounded-lg text-center border border-gray-100">
+                        Looks good! Click Continue to take photos.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Area */}
+              {!isProcessed && (
+                <div className="p-3 bg-white border-t border-gray-100 rounded-xl relative shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+                  <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+                    <textarea
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder={t('chat_placeholder')}
+                      className="flex-1 bg-transparent border-none resize-none max-h-32 min-h-[44px] py-2.5 px-3 focus:ring-0 text-sm text-gray-800 font-medium"
+                      rows={1}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          processWithAI();
+                        }
+                      }}
+                    />
+                    <div className="flex gap-2 pb-1 pr-1 shrink-0">
+                      <button
+                        onClick={toggleListening}
+                        className={cn(
+                          "w-10 h-10 rounded-full flex items-center justify-center transition-all", 
+                          isListening 
+                            ? "bg-red-50 text-red-500 border border-red-200 animate-pulse shadow-inner" 
+                            : "bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-gray-200 shadow-sm"
+                        )}
+                        title={t('start_listening')}
+                      >
+                        <Mic size={18} className={isListening ? "animate-pulse" : ""} />
+                      </button>
+                      <button
+                        onClick={() => processWithAI()}
+                        disabled={!inputText.trim() || isProcessingAI}
+                        className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-dark disabled:bg-gray-200 disabled:text-gray-400 transition-all shadow-md disabled:shadow-none"
+                        title={t('process_ai')}
+                      >
+                        <ArrowRight size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Dual Camera & Upload */}
+          {step === 2 && (
+            <div className="animate-fade-in-up flex flex-col h-full">
+              <h3 className="text-2xl font-bold mb-2">{t('craft_photos')}</h3>
+              <p className="text-gray-500 mb-6">Capture the craft using your live camera or upload existing photos.</p>
+              
+              {isVerifyingVision && (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-xl mb-6 text-sm flex gap-3 items-center shadow-sm">
+                  <div className="w-5 h-5 border-2 border-yellow-400 border-t-yellow-800 rounded-full animate-spin"></div>
+                  <p className="font-bold">Running AI Vision Verification...</p>
+                </div>
+              )}
+
+              {isVisionVerified && images.length > 0 && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl mb-6 text-sm flex gap-3 items-center shadow-sm animate-fade-in-up">
+                  <ShieldCheck size={20} className="text-green-600" />
+                  <p><strong>AI Verified:</strong> Matches description.</p>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <button 
+                  onClick={startCamera}
+                  className={cn("py-3 rounded-xl font-bold flex items-center justify-center gap-2 border-2 transition-all", isCameraActive ? "bg-primary text-white border-primary" : "bg-white text-gray-700 border-gray-200 hover:border-primary")}
+                >
+                  <Camera size={18} /> {t('capture_camera')}
+                </button>
+                <label className="py-3 rounded-xl font-bold flex items-center justify-center gap-2 border-2 bg-white text-gray-700 border-gray-200 hover:border-primary cursor-pointer transition-all">
+                  <UploadCloud size={18} /> {t('upload_device')}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                </label>
+              </div>
+
+              {/* Camera Viewfinder */}
+              {isCameraActive && (
+                <div className="relative bg-black rounded-2xl overflow-hidden aspect-video mb-6 flex flex-col items-center justify-end shadow-inner">
+                  <video ref={videoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
+                  <canvas ref={canvasRef} width="640" height="480" className="hidden" />
+                  <button 
+                    onClick={captureFrame}
+                    className="relative z-10 mb-4 w-14 h-14 bg-white/30 backdrop-blur-md border-4 border-white rounded-full flex items-center justify-center hover:bg-white/50 transition-all active:scale-95 shadow-lg"
+                  >
+                    <div className="w-10 h-10 bg-white rounded-full"></div>
+                  </button>
+                  <button onClick={stopCamera} className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 z-10">
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+
+              {/* Image Grid */}
+              {images.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-sm text-gray-500 mb-3 uppercase tracking-wider">Captured Images ({images.length})</h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    {images.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
+                        <Image src={img} alt={`Capture ${idx}`} fill className="object-cover" />
+                        <button 
+                          onClick={() => removeImage(idx)}
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {images.length === 0 && !isCameraActive && (
+                <div className="flex-grow flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 text-gray-400 py-12">
+                  <Camera size={40} className="mb-2 opacity-50" />
+                  <p>No photos captured yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Raw Material Proof */}
+          {step === 3 && (
+            <div className="animate-fade-in-up">
+              <h3 className="text-2xl font-bold mb-2">{t('raw_material_proof')}</h3>
+              <div className="bg-blue-50 border border-blue-100 text-blue-800 px-4 py-3 rounded-xl mb-6 text-sm flex gap-2 items-start">
+                <Sparkles className="shrink-0 mt-0.5" size={16} />
+                <p><strong>Optional:</strong> Upload your raw material bills or receipts. This increases your <strong>Fairness Score</strong> and helps you get a better valuation.</p>
+              </div>
+              
+              <div className="w-full h-48 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors mb-6">
+                <FileText size={40} className="mb-3 text-gray-400" />
+                <span className="font-medium text-gray-700">{t('upload_bill')}</span>
+                <span className="text-xs text-gray-400 mt-1">JPEG, PNG, or PDF</span>
+              </div>
+            </div>
+          )}
+
+          {/* Success Step */}
+          {step === 4 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in-up">
+              <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle2 size={48} className="text-green-500" />
+              </div>
+              <h3 className="text-3xl font-bold mb-3">Upload Successful!</h3>
+              <p className="text-gray-500 mb-8 max-w-sm">Your craft has been saved to your digital portfolio.</p>
+              
+              <button
+                onClick={resetAndClose}
+                className="w-full max-w-sm bg-primary text-white py-4 rounded-2xl font-bold hover:bg-primary-dark transition-all text-lg shadow-xl shadow-primary/20"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        {step < 4 && (
+          <div className="p-6 border-t border-gray-100 bg-gray-50/50 flex justify-between items-center shrink-0">
+            {step > 1 ? (
+              <button 
+                onClick={() => setStep(step - 1)}
+                className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-200 transition-colors"
+              >
+                Back
+              </button>
+            ) : <div></div>}
+            
+            {step === 3 ? (
+              <button 
+                onClick={handleSaveUpload}
+                disabled={isCreatingDraft}
+                className="px-8 py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/20 disabled:bg-gray-400"
+              >
+                {isCreatingDraft ? "Saving..." : "Save Upload"} <CheckCircle2 size={18} />
+              </button>
+            ) : (
+              <button 
+                onClick={handleNext}
+                disabled={(step === 1 && !isProcessed) || (step === 2 && (!isVisionVerified || images.length === 0))}
+                className="px-8 py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
+              >
+                Next <ArrowRight size={18} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
