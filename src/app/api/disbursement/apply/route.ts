@@ -66,23 +66,51 @@ export async function POST(req: Request) {
     if (assignedAdminId) dataToUpdate.assignedAdminId = assignedAdminId;
     if (patchId) dataToUpdate.patchId = patchId;
 
-    const updatedItem = await prisma.craftItem.update({
-      where: { id: itemId },
-      data: dataToUpdate
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedItem = await tx.craftItem.update({
+        where: { id: itemId },
+        data: dataToUpdate
+      });
+
+      await logCraftItemEvent({
+        prisma: tx as any,
+        craftItemId: itemId,
+        actorId: decoded.userId,
+        actorRole: 'ARTISAN',
+        action: 'ITEM_MINTED_AND_SOLD',
+        previousState: { status: item.status },
+        newState: { status: newStatus, patchId: patchId },
+        comments: `Artisan selected ${selectedOption}. Received advance: ₹${advancePaid.toLocaleString()}. Patch ID: ${patchId} minted.`
+      });
+
+      // Implement +2.5% Health Score Gain for successful authentic sale
+      const artisanProfile = await tx.artisanProfile.findUnique({
+        where: { userId: decoded.userId }
+      });
+      
+      if (artisanProfile) {
+        const newHealthScore = Math.min(100, artisanProfile.healthScore + 2.5);
+        
+        await tx.artisanProfile.update({
+          where: { id: artisanProfile.id },
+          data: { healthScore: newHealthScore }
+        });
+        
+        // Dynamic Account Status Update based on health
+        let newAccountStatus = 'ACTIVE';
+        if (newHealthScore < 50) newAccountStatus = 'PENDING_BAN_APPROVAL';
+        else if (newHealthScore < 65) newAccountStatus = 'PROBATION';
+        
+        await tx.user.update({
+          where: { id: decoded.userId },
+          data: { accountStatus: newAccountStatus as any }
+        });
+      }
+
+      return updatedItem;
     });
 
-    await logCraftItemEvent({
-      prisma,
-      craftItemId: itemId,
-      actorId: decoded.userId,
-      actorRole: 'ARTISAN',
-      action: 'ITEM_MINTED_AND_SOLD',
-      previousState: { status: item.status },
-      newState: { status: newStatus, patchId: patchId },
-      comments: `Artisan selected ${selectedOption}. Received advance: ₹${advancePaid.toLocaleString()}. Patch ID: ${patchId} minted.`
-    });
-
-    return NextResponse.json({ success: true, item: updatedItem });
+    return NextResponse.json({ success: true, item: result });
   } catch (error: any) {
     console.error('Disbursement Apply API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

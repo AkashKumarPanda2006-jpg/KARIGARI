@@ -137,7 +137,7 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
         setCreatedItemId(data.item.id);
         setStep(4); // Use step 4 as the success screen
       } else {
-        alert("Failed to save upload.");
+        alert(data.error || "Failed to save upload.");
       }
     } catch (e) {
       console.error(e);
@@ -156,7 +156,7 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
       return;
     }
     
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Your browser does not support Speech Recognition.");
       return;
@@ -618,7 +618,11 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
                 disabled={(step === 1 && !isProcessed) || (step === 2 && (!isVisionVerified || images.length === 0))}
                 className="px-8 py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-2 shadow-lg shadow-primary/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none"
               >
-                Next <ArrowRight size={18} />
+                {step === 1 ? (
+                  <>Next & Capture <Camera size={18} /></>
+                ) : (
+                  <>Next <ArrowRight size={18} /></>
+                )}
               </button>
             )}
           </div>

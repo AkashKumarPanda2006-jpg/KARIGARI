@@ -17,11 +17,16 @@ model User {
   email          String          @unique
   passwordHash   String
   role           Role
+  accountStatus  String          @default("ACTIVE")
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   artisanProfile ArtisanProfile?
   craftItems     CraftItem[]
+  
+  // Admin fields
+  patchBankBalance Int @default(5000)
+  patchBankIssued  Int @default(0)
 }
 
 model ArtisanProfile {
@@ -36,6 +41,7 @@ model ArtisanProfile {
   upiId           String?
   description     String?
   tags            String[]
+  healthScore     Float    @default(100)
 }
 
 model CraftItem {
@@ -63,6 +69,8 @@ model CraftItem {
   salePrice           Float?
   assignedAdminId     String?
   createdAt           DateTime @default(now())
+  firstFailedScanAt   DateTime?
+  failedScanCount     Int      @default(0)
 
   auditLogs           AuditLog[]
 }

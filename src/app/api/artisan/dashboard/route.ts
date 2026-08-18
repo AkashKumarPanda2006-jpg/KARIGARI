@@ -29,7 +29,8 @@ export async function GET(req: Request) {
 
     // Fetch user details
     const user = await prisma.user.findUnique({
-      where: { id: artisanId }
+      where: { id: artisanId },
+      include: { artisanProfile: true }
     });
 
     // 1. My Captures (total count)
@@ -79,10 +80,13 @@ export async function GET(req: Request) {
       success: true,
       data: {
         artisanName: user?.name,
+        artisanProfile: user?.artisanProfile,
         myCapturesCount,
         totalAdvances,
         itemsSold,
         totalEarnings,
+        healthScore: user?.artisanProfile?.healthScore ?? 100,
+        accountStatus: user?.accountStatus ?? 'ACTIVE',
         recentCaptures
       }
     });

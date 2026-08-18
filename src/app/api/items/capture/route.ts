@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { logCraftItemEvent } from '@/lib/auditLogger';
+import { validateArtisanClaim } from '@/lib/benchmarkData';
 
 export async function POST(req: Request) {
   try {
@@ -37,6 +38,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const rawCost = Number(rawMaterialCost);
+    const days = Number(laborDays);
+
+    // --- AI AUTO-REJECTION FILTER ---
+    const validationResult = validateArtisanClaim(craftType, days, rawCost);
+    if (!validationResult.isValid) {
+      return NextResponse.json({ error: validationResult.reason }, { status: 400 });
+    }
+
     // --- ML Prediction Engine (Mock) ---
     // 1. Dynamic Base Wage based on craft
     let baseWage = 500;
@@ -45,8 +55,6 @@ export async function POST(req: Request) {
     else if (craftLower.includes('cotton')) baseWage = 450;
     else if (craftLower.includes('wool')) baseWage = 550;
 
-    const rawCost = Number(rawMaterialCost);
-    const days = Number(laborDays);
     const laborCost = days * baseWage;
     const overhead = (laborCost + rawCost) * 0.1;
     const fairWageFloor = laborCost + rawCost + overhead;
@@ -67,13 +75,26 @@ export async function POST(req: Request) {
     
     // Auto-update ArtisanProfile tags with the new craftType
     try {
-      const profile = await prisma.artisanProfile.findUnique({ where: { userId: decoded.userId } });
-      if (profile && craftType) {
-        const currentTags = profile.tags || [];
-        if (!currentTags.includes(craftType)) {
-          await prisma.artisanProfile.update({
-            where: { userId: decoded.userId },
-            data: { tags: { push: craftType } }
+      if (craftType) {
+        const profile = await prisma.artisanProfile.findUnique({ where: { userId: decoded.userId } });
+        if (profile) {
+          const currentTags = profile.tags || [];
+          if (!currentTags.includes(craftType)) {
+            await prisma.artisanProfile.update({
+              where: { userId: decoded.userId },
+              data: { tags: { push: craftType } }
+            });
+          }
+        } else {
+          // Create the profile with the tag if it doesn't exist
+          await prisma.artisanProfile.create({
+            data: {
+              userId: decoded.userId,
+              craftType: "Unknown",
+              location: "Unknown",
+              experienceYears: 0,
+              tags: ["Artisan", craftType]
+            }
           });
         }
       }
@@ -99,7 +120,7 @@ export async function POST(req: Request) {
         marketPriceMax,
         creditScore,
         fairnessScore: 95.0,
-        status: 'UPLOADED',
+        status: 'PENDING_VERIFICATION',
       }
     });
 
@@ -109,8 +130,8 @@ export async function POST(req: Request) {
       actorId: decoded.userId,
       actorRole: 'ARTISAN',
       action: 'UPLOAD_CREATED',
-      newState: { status: 'UPLOADED' },
-      comments: `Artisan uploaded ${craftType}. Base fair wage estimated at ₹${fairWageFloor.toLocaleString()}.`
+      newState: { status: 'PENDING_VERIFICATION' },
+      comments: `Artisan uploaded ${craftType}. Auto-verified math plausible. Sent to Admin for review.`
     });
 
     return NextResponse.json({ 

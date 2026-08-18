@@ -39,6 +39,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
+    // Live Polling every 15 seconds for notifications
+    const interval = setInterval(fetchDashboardData, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
@@ -75,6 +78,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleBatchApprove = async (artisanId: string) => {
+    // Find all pending item IDs for this artisan
+    const itemsToApprove = dashboardData?.pendingCaptures
+      ?.filter((item: any) => item.artisanId === artisanId)
+      ?.map((item: any) => item.id);
+
+    if (!itemsToApprove || itemsToApprove.length === 0) return;
+
+    try {
+      const res = await fetch('/api/admin/verify-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemIds: itemsToApprove })
+      });
+      if (res.ok) {
+        fetchDashboardData();
+        alert("Batch Approved Successfully!");
+      } else {
+        const err = await res.json();
+        console.error("API error:", err);
+        alert("Failed to approve: " + err.error);
+      }
+    } catch (e: any) {
+      console.error('Failed to batch approve', e);
+      alert("Error: " + e.message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar Navigation */}
@@ -88,22 +119,21 @@ export default function AdminDashboard() {
         
         <div className="flex-grow overflow-y-auto py-6">
           <nav className="space-y-1 px-3">
-            <NavItem icon={<LayoutDashboard />} label="Dashboard" active isOpen={isSidebarOpen} />
-            <NavItem icon={<Users />} label="Artisans" isOpen={isSidebarOpen} />
-            <NavItem icon={<Package />} label="Captures & Items" isOpen={isSidebarOpen} />
-            <NavItem icon={<Banknote />} label="Advances" isOpen={isSidebarOpen} />
-            <NavItem icon={<TrendingUp />} label="Sales" isOpen={isSidebarOpen} />
-            <NavItem icon={<History />} label="Repayments" isOpen={isSidebarOpen} />
-            <NavItem icon={<Tag />} label="Patch Inventory" isOpen={isSidebarOpen} />
-            <NavItem icon={<ShieldAlert />} label="Counterfeit Alerts" isOpen={isSidebarOpen} badge="3" />
+            <NavItem icon={<LayoutDashboard />} label="Dashboard" active isOpen={isSidebarOpen} href="/admin/dashboard" />
+            <NavItem icon={<Users />} label="User Management" isOpen={isSidebarOpen} href="/admin/users" />
+            <NavItem icon={<Package />} label="Verify Batch" isOpen={isSidebarOpen} href="/admin/verify" />
+            <NavItem 
+              icon={<ShieldAlert />} 
+              label="Counterfeit Alerts" 
+              isOpen={isSidebarOpen} 
+              badge={dashboardData?.alertCount > 0 ? dashboardData.alertCount.toString() : undefined} 
+              href="/admin/alerts"
+            />
             
             <div className="pt-6 pb-2">
               <p className={`px-4 text-xs font-bold text-white/40 uppercase tracking-wider ${isSidebarOpen ? 'block' : 'hidden'}`}>System</p>
             </div>
             
-            <NavItem icon={<Activity />} label="Reports & Analytics" isOpen={isSidebarOpen} />
-            <NavItem icon={<Settings />} label="Cooperative Settings" isOpen={isSidebarOpen} />
-            <NavItem icon={<UserCog />} label="Users & Roles" isOpen={isSidebarOpen} />
             <NavItem icon={<ScrollText />} label="Audit Log" isOpen={isSidebarOpen} href="/admin/audit-logs" />
           </nav>
         </div>
@@ -153,7 +183,14 @@ export default function AdminDashboard() {
               May 1 - May 31, 2024
             </div>
             
-            <button className="flex items-center gap-2 text-sm font-bold bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded-md transition-colors shadow-sm">
+            <div className="relative cursor-pointer hover:bg-gray-100 p-2 rounded-full transition-colors">
+              <Bell size={20} className="text-gray-600" />
+              {dashboardData?.alertCount > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
+              )}
+            </div>
+
+            <button className="flex items-center gap-2 text-sm font-bold bg-primary hover:bg-primary-dark text-white px-4 py-1.5 rounded-md transition-colors shadow-sm ml-2">
               <Download size={16} />
               <span className="hidden sm:inline">Export Report</span>
             </button>
@@ -174,7 +211,7 @@ export default function AdminDashboard() {
             <AdminMetricCard title="Items Captured" value="612" trend="+45" trendPositive />
             <AdminMetricCard title="Advances Disbursed" value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} trend="+15%" trendPositive />
             <AdminMetricCard title="Items Sold" value="325" trend="+24" trendPositive />
-            <AdminMetricCard title="Fair Pay Compliance" value={dashboardData ? `${dashboardData.complianceRate}%` : "..."} trend="-1%" trendPositive={false} />
+            <AdminMetricCard title="Regional Econ Health" value={dashboardData ? `${dashboardData.complianceRate}%` : "..."} trend="-1%" trendPositive={false} />
           </div>
 
           {/* Charts Row */}
@@ -183,8 +220,8 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:col-span-1 flex flex-col">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h3 className="font-bold text-gray-900">Fair Wage Compliance</h3>
-                  <p className="text-xs text-gray-500">Overview of payouts vs fair floor</p>
+                  <h3 className="font-bold text-gray-900">Regional Economic Health</h3>
+                  <p className="text-xs text-gray-500">Average Final Price vs AI Fair Wage Floor</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
                   <span className="font-bold text-green-600 text-sm">92%</span>
@@ -273,6 +310,118 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Pending Approvals Row (New Feature) */}
+          {dashboardData?.pendingCaptures?.length > 0 && (
+            <div className="mb-8 bg-white rounded-2xl shadow-sm border border-yellow-200 p-6 flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <ShieldAlert size={18} className="text-yellow-500" />
+                    Pending AI-Filtered Approvals
+                  </h3>
+                  <p className="text-xs text-gray-500">These items passed the AI Anomaly Check and require final Admin verification.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {/* Group pending captures by artisan */}
+                {Object.entries(
+                  dashboardData.pendingCaptures.reduce((acc: any, item: any) => {
+                    if (!acc[item.artisanId]) acc[item.artisanId] = { artisan: item.artisan, items: [] };
+                    acc[item.artisanId].items.push(item);
+                    return acc;
+                  }, {})
+                ).map(([artisanId, data]: any) => (
+                  <div key={artisanId} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center gap-3">
+                        <Image src={data.artisan?.profile?.photoUrl || "/female_artisan.jpg"} alt={data.artisan?.name || "Unknown Artisan"} width={32} height={32} className="rounded-full object-cover" />
+                        <h4 className="font-bold text-gray-800">{data.artisan?.name || "Unknown Artisan"}</h4>
+                        <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full font-bold">{data.items.length} Pending</span>
+                      </div>
+                      <button 
+                        onClick={() => handleBatchApprove(artisanId)}
+                        className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-1.5 px-4 rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        <CheckCircle2 size={14} /> Batch Approve
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {data.items.map((item: any) => (
+                        <div key={item.id} className="bg-white p-3 rounded-lg border border-gray-100 flex gap-3 shadow-sm items-center">
+                          <Image src={item.images?.[0] || "/ikat_saree.jpg"} alt={item.craftType} width={40} height={40} className="rounded-md object-cover" />
+                          <div>
+                            <p className="text-xs font-bold text-gray-900">{item.craftType}</p>
+                            <p className="text-[10px] text-gray-500">Labor: {item.laborDays} days | Mat: ₹{item.rawMaterialCost}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* At Risk Artisans Row */}
+          {dashboardData?.atRiskArtisans?.length > 0 && (
+            <div className="mb-8 bg-white rounded-2xl shadow-sm border border-red-200 p-6 flex flex-col">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <ShieldAlert size={18} className="text-red-500" />
+                    At-Risk Artisans (Counterfeit Alerts)
+                  </h3>
+                  <p className="text-xs text-gray-500">These artisans have a Health Score below 65% and are eligible for a ban.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {dashboardData.atRiskArtisans.map((artisan: any) => (
+                  <div key={artisan.id} className="bg-red-50 rounded-xl p-4 border border-red-100 flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <Image src={artisan.artisanProfile?.photoUrl || "/female_artisan.jpg"} alt={artisan.name} width={40} height={40} className="rounded-full object-cover" />
+                        <div>
+                          <h4 className="font-bold text-gray-800">{artisan.name}</h4>
+                          <p className="text-xs text-gray-500">{artisan.email}</p>
+                        </div>
+                      </div>
+                      <div className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded-md">
+                        {artisan.artisanProfile?.healthScore}% Health
+                      </div>
+                    </div>
+                    <button 
+                      onClick={async () => {
+                        if (confirm(`Are you sure you want to ban ${artisan.name}? This action is permanent.`)) {
+                          try {
+                            const res = await fetch('/api/admin/ban-artisan', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ artisanId: artisan.id })
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                              alert(data.message);
+                              fetchDashboardData();
+                            } else {
+                              alert(data.error);
+                            }
+                          } catch (e) {
+                            alert('Error banning artisan');
+                          }
+                        }
+                      }}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      Ban Artisan
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Data Grids Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
@@ -357,21 +506,21 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4 mb-2">
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Total Allocated</p>
-                    <p className="font-bold text-lg">4,850</p>
+                    <p className="font-bold text-lg">{dashboardData ? (dashboardData.patchBankBalance + dashboardData.patchBankIssued).toLocaleString() : "..."}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 mb-1">Issued</p>
-                    <p className="font-bold text-lg">3,210</p>
+                    <p className="font-bold text-lg">{dashboardData ? dashboardData.patchBankIssued.toLocaleString() : "..."}</p>
                   </div>
                 </div>
                 
                 <div className="bg-gray-100 rounded-lg p-3 flex justify-between items-center mt-2 border border-gray-200">
                   <span className="text-sm font-medium text-gray-600">Available</span>
-                  <span className="font-bold text-lg text-primary">1,640</span>
+                  <span className="font-bold text-lg text-primary">{dashboardData ? dashboardData.patchBankBalance.toLocaleString() : "..."}</span>
                 </div>
                 
                 <div className="w-full bg-gray-200 rounded-full h-1.5 mt-4 overflow-hidden">
-                  <div className="bg-primary h-1.5 rounded-full" style={{ width: '66%' }}></div>
+                  <div className="bg-primary h-1.5 rounded-full" style={{ width: dashboardData ? `${Math.round((dashboardData.patchBankIssued / Math.max(1, (dashboardData.patchBankBalance + dashboardData.patchBankIssued))) * 100)}%` : '0%' }}></div>
                 </div>
               </div>
 

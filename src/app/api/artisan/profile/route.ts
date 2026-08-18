@@ -7,18 +7,25 @@ export async function PUT(req: Request) {
     const { photoUrl, upiId, description } = await req.json();
     
     // Auth Check
-    const cookieStore = cookies();
-    const sessionCookie = cookieStore.get('auth_session');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth-token');
     
-    if (!sessionCookie) {
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId, role } = JSON.parse(sessionCookie.value);
+    const jwt = require('jsonwebtoken');
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'fallback-secret');
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
     
-    if (role !== 'ARTISAN') {
+    if (decoded.role !== 'ARTISAN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
+    const userId = decoded.userId;
 
     // Upsert ArtisanProfile
     const profile = await prisma.artisanProfile.upsert({
@@ -32,7 +39,10 @@ export async function PUT(req: Request) {
         userId,
         photoUrl,
         upiId,
-        description
+        description,
+        craftType: "Unknown",
+        location: "Unknown",
+        experienceYears: 0
       }
     });
 

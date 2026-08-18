@@ -25,8 +25,8 @@ export async function logCraftItemEvent({
       actorId,
       actorRole,
       action,
-      previousState: previousState ? JSON.stringify(previousState) : null,
-      newState: newState ? JSON.stringify(newState) : null,
+      previousState: previousState ? previousState : undefined,
+      newState: newState ? newState : undefined,
       comments,
     },
   });

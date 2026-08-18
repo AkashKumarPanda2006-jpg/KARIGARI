@@ -39,32 +39,76 @@ export async function GET(req: Request) {
     });
     const totalAdvances = advances._sum.advancePaid || 0;
 
-    // 3. Fair Wage Compliance Rate
-    // Items that opted out of the local middleman vs total items with decisions
-    const itemsWithDecisions = await prisma.craftItem.count({
-      where: { status: { not: 'PENDING_DISBURSEMENT' } }
+    // 3. Regional Fair Wage Index (Local Admin's specific items)
+    const adminItems = await prisma.craftItem.findMany({
+      where: { assignedAdminId: decoded.userId, status: 'SOLD_FINAL' }
     });
     
-    const compliantItems = await prisma.craftItem.count({
-      where: { status: { in: ['ADVANCE_PAID', 'SOLD_FINAL', 'LISTED_AUCTION'] } }
-    });
-
-    const complianceRate = itemsWithDecisions > 0 
-      ? Math.round((compliantItems / itemsWithDecisions) * 100) 
+    let totalScore = 0;
+    if (adminItems.length > 0) {
+      adminItems.forEach(item => {
+        const salePrice = item.salePrice || item.fairWageFloor || 0;
+        const floor = item.fairWageFloor || 1;
+        // Cap at 100% to prevent inflation gamification
+        let score = (salePrice / floor) * 100;
+        if (score > 100) score = 100;
+        totalScore += score;
+      });
+    }
+    
+    const complianceRate = adminItems.length > 0 
+      ? Math.round(totalScore / adminItems.length) 
       : 100;
 
-    // 4. Recent Captures
     const recentCaptures = await prisma.craftItem.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
+      where: { status: { not: 'PENDING_VERIFICATION' } },
       include: {
         artisan: {
-          select: { name: true }
+          select: { name: true, artisanProfile: true }
         },
         auditLogs: {
           orderBy: { createdAt: 'desc' }
         }
       }
+    });
+
+    const pendingCaptures = await prisma.craftItem.findMany({
+      where: { status: 'PENDING_VERIFICATION' },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        artisan: {
+          select: { name: true, artisanProfile: true }
+        }
+      }
+    });
+
+    // 5. Alert Count (Counterfeits or low fairness scores)
+    const alertCount = await prisma.craftItem.count({
+      where: {
+        OR: [
+          { status: 'FLAGGED' },
+          { fairnessScore: { lt: 60 } }
+        ]
+      }
+    });
+
+    // 6. At Risk Artisans (Health < 65%)
+    const atRiskArtisans = await prisma.user.findMany({
+      where: {
+        role: 'ARTISAN',
+        accountStatus: 'ACTIVE',
+        artisanProfile: {
+          healthScore: { lt: 65 }
+        }
+      },
+      include: { artisanProfile: true }
+    });
+
+    // Fetch Admin user details
+    const adminUser = await prisma.user.findUnique({
+      where: { id: decoded.userId }
     });
 
     return NextResponse.json({
@@ -73,7 +117,12 @@ export async function GET(req: Request) {
         totalArtisans,
         totalAdvances,
         complianceRate,
-        recentCaptures
+        recentCaptures,
+        pendingCaptures,
+        alertCount,
+        atRiskArtisans,
+        patchBankBalance: adminUser?.patchBankBalance || 0,
+        patchBankIssued: adminUser?.patchBankIssued || 0
       }
     });
   } catch (error: any) {

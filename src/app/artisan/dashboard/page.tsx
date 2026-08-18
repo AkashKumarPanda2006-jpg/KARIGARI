@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { CaptureModal } from "@/components/CaptureModal";
 import { SellModal } from "@/components/SellModal";
 import { ProfileEditorModal } from "@/components/ProfileEditorModal";
+import { CrossCheckModal } from "@/components/CrossCheckModal";
+import { DisputeModal } from "@/components/DisputeModal";
 import { useLanguage } from "@/lib/translations";
 
 export default function ArtisanDashboard() {
@@ -15,10 +17,14 @@ export default function ArtisanDashboard() {
   const { t, language, changeLanguage } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
+  const [isCrossCheckModalOpen, setIsCrossCheckModalOpen] = useState(false);
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [selectedSellItem, setSelectedSellItem] = useState<any>(null);
+  const [selectedCrossCheckItem, setSelectedCrossCheckItem] = useState<any>(null);
+  const [selectedDisputeItem, setSelectedDisputeItem] = useState<any>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -246,6 +252,14 @@ export default function ArtisanDashboard() {
                           setSelectedSellItem(item);
                           setIsSellModalOpen(true);
                         }}
+                        onCrossCheck={() => {
+                          setSelectedCrossCheckItem(item);
+                          setIsCrossCheckModalOpen(true);
+                        }}
+                        onDispute={() => {
+                          setSelectedDisputeItem(item);
+                          setIsDisputeModalOpen(true);
+                        }}
                       />
                     );
                   })
@@ -262,6 +276,19 @@ export default function ArtisanDashboard() {
 
       <CaptureModal isOpen={isModalOpen} onClose={handleModalClose} />
       <SellModal isOpen={isSellModalOpen} onClose={handleSellModalClose} item={selectedSellItem} />
+      <CrossCheckModal 
+        isOpen={isCrossCheckModalOpen} 
+        onClose={() => {
+          setIsCrossCheckModalOpen(false);
+          fetchDashboardData();
+        }} 
+        item={selectedCrossCheckItem} 
+      />
+      <DisputeModal 
+        isOpen={isDisputeModalOpen} 
+        onClose={() => setIsDisputeModalOpen(false)} 
+        item={selectedDisputeItem} 
+      />
       <ProfileEditorModal 
         isOpen={isProfileEditorOpen} 
         onClose={() => setIsProfileEditorOpen(false)} 
@@ -296,7 +323,7 @@ function MetricCard({ title, value, icon, trend }: { title: string, value: strin
   );
 }
 
-function TableRow({ title, id, date, status, statusColor, image, onView, onSell }: { title: string, id: string, date: string, status: string, statusColor: string, image: string, onView: () => void, onSell: () => void }) {
+function TableRow({ title, id, date, status, statusColor, image, onView, onSell, onCrossCheck, onDispute }: { title: string, id: string, date: string, status: string, statusColor: string, image: string, onView: () => void, onSell: () => void, onCrossCheck: () => void, onDispute?: () => void }) {
   return (
     <tr className="hover:bg-gray-50/50 transition-colors">
       <td className="px-6 py-4">
@@ -311,17 +338,38 @@ function TableRow({ title, id, date, status, statusColor, image, onView, onSell 
       <td className="px-6 py-4 text-sm text-gray-600">{date}</td>
       <td className="px-6 py-4">
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${statusColor}`}>
-          {status}
+          {status.replace(/_/g, ' ')}
         </span>
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-2">
-          {status === 'UPLOADED' && (
+          {status === 'VERIFIED' && (
+            <button 
+              onClick={onCrossCheck}
+              className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap shadow-sm"
+            >
+              Attach QR & Cross-Check
+            </button>
+          )}
+          {status === 'TAG_ATTACHED' && (
             <button 
               onClick={onSell}
               className="text-sm font-bold text-white bg-green-600 hover:bg-green-700 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap shadow-sm"
             >
-              Sell Item
+              Transfer Rights
+            </button>
+          )}
+          {status === 'PENDING_VERIFICATION' && (
+            <span className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full flex items-center gap-1 border border-orange-200 whitespace-nowrap">
+              <ShieldAlert size={14} /> Pending Admin
+            </span>
+          )}
+          {status === 'FLAGGED' && (
+            <button 
+              onClick={onDispute}
+              className="text-sm font-bold text-white bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap shadow-sm"
+            >
+              Review Counterfeit
             </button>
           )}
           <button 
