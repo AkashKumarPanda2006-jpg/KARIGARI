@@ -82,7 +82,10 @@ export async function GET(req: Request) {
 
     // 3. Regional Fair Wage Index (Local Admin's specific items)
     const adminItems = await prisma.craftItem.findMany({
-      where: { assignedAdminId: decoded.userId, status: 'SOLD_FINAL' }
+      where: { 
+        assignedAdminId: decoded.userId,
+        status: { not: 'PENDING_VERIFICATION' }
+      }
     });
     
     let totalScore = 0;
@@ -210,10 +213,13 @@ export async function GET(req: Request) {
       else below++;
     });
     
-    const fairWageData = [
-      { name: "Above Fair Floor", value: above || 58, color: "#10b981" },
-      { name: "At Fair Floor", value: at || 34, color: "#34d399" },
-      { name: "Below Fair Floor", value: below || 8, color: "#ef4444" }
+    const totalWageItems = above + at + below;
+    const fairWageData = totalWageItems > 0 ? [
+      { name: "Above Fair Floor", value: Math.round((above / totalWageItems) * 100), color: "#10b981" },
+      { name: "At Fair Floor", value: Math.round((at / totalWageItems) * 100), color: "#34d399" },
+      { name: "Below Fair Floor", value: Math.round((below / totalWageItems) * 100), color: "#ef4444" }
+    ] : [
+      { name: "No Sales Data", value: 100, color: "#e5e7eb" }
     ];
     
     const disbursementData = [
