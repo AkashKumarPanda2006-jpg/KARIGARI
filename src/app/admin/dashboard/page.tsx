@@ -207,11 +207,11 @@ export default function AdminDashboard() {
 
           {/* 5 Top Metric Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <AdminMetricCard title="Total Artisans" value={dashboardData ? dashboardData.totalArtisans.toString() : "..."} trend="+12" trendPositive />
-            <AdminMetricCard title="Items Captured" value={dashboardData ? dashboardData.itemsCaptured.toString() : "..."} trend="+45" trendPositive />
-            <AdminMetricCard title="Advances Disbursed" value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} trend="+15%" trendPositive />
-            <AdminMetricCard title="Items Sold" value={dashboardData ? dashboardData.itemsSold.toString() : "..."} trend="+24" trendPositive />
-            <AdminMetricCard title="Regional Econ Health" value={dashboardData ? `${dashboardData.complianceRate}%` : "..."} trend="-1%" trendPositive={false} />
+            <AdminMetricCard title="Total Artisans" value={dashboardData ? dashboardData.totalArtisans.toString() : "..."} trend={dashboardData?.trends?.artisans || ""} trendPositive />
+            <AdminMetricCard title="Items Captured" value={dashboardData ? dashboardData.itemsCaptured.toString() : "..."} trend={dashboardData?.trends?.captured || ""} trendPositive />
+            <AdminMetricCard title="Advances Disbursed" value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} trend={dashboardData?.trends?.advances || ""} trendPositive />
+            <AdminMetricCard title="Items Sold" value={dashboardData ? dashboardData.itemsSold.toString() : "..."} trend={dashboardData?.trends?.sold || ""} trendPositive />
+            <AdminMetricCard title="Regional Econ Health" value={dashboardData ? `${dashboardData.complianceRate}%` : "..."} trend={""} trendPositive={false} />
           </div>
 
           {/* Charts Row */}
@@ -228,15 +228,15 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="flex-grow relative flex flex-col justify-center min-h-[240px]">
+              <div className="flex-grow relative flex flex-col justify-center min-h-[260px] py-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={dashboardData?.fairWageData || []}
                       cx="50%"
                       cy="50%"
-                      innerRadius={65}
-                      outerRadius={95}
+                      innerRadius={60}
+                      outerRadius={80}
                       paddingAngle={3}
                       dataKey="value"
                       stroke="none"
@@ -690,11 +690,13 @@ function AdminMetricCard({ title, value, trend, trendPositive }: { title: string
       <p className="text-xs font-medium text-gray-500 mb-2 truncate">{title}</p>
       <div className="flex items-end justify-between">
         <h3 className="text-xl lg:text-2xl font-bold text-gray-900">{value}</h3>
-        <div className={`flex items-center text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md ${
-          trendPositive ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'
-        }`}>
-          {trend}
-        </div>
+        {trend && (
+          <div className={`flex items-center text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md ${
+            trendPositive ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'
+          }`}>
+            {trend}
+          </div>
+        )}
       </div>
     </div>
   );

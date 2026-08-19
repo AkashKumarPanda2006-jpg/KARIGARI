@@ -45,6 +45,41 @@ export async function GET(req: Request) {
       where: { status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } }
     });
 
+    // Trend calculations (last 7 days)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const pastWeekItemsCaptured = await prisma.craftItem.count({
+      where: { createdAt: { gte: oneWeekAgo } }
+    });
+    
+    const pastWeekItemsSold = await prisma.craftItem.count({
+      where: { 
+        status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] },
+        updatedAt: { gte: oneWeekAgo }
+      }
+    });
+
+    const pastWeekAdvancesQuery = await prisma.craftItem.aggregate({
+      _sum: { advancePaid: true },
+      where: { 
+        status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] },
+        updatedAt: { gte: oneWeekAgo }
+      }
+    });
+    const pastWeekAdvances = pastWeekAdvancesQuery._sum.advancePaid || 0;
+    
+    const pastWeekArtisans = await prisma.user.count({
+      where: { role: 'ARTISAN', createdAt: { gte: oneWeekAgo } }
+    });
+
+    const trends = {
+      artisans: `+${pastWeekArtisans}`,
+      captured: `+${pastWeekItemsCaptured}`,
+      sold: `+${pastWeekItemsSold}`,
+      advances: `+₹${pastWeekAdvances.toLocaleString()}`
+    };
+
     // 3. Regional Fair Wage Index (Local Admin's specific items)
     const adminItems = await prisma.craftItem.findMany({
       where: { assignedAdminId: decoded.userId, status: 'SOLD_FINAL' }
@@ -216,6 +251,7 @@ export async function GET(req: Request) {
         patchBankIssued: adminUser?.patchBankIssued || 0,
         itemsCaptured,
         itemsSold,
+        trends,
         leaderboard,
         fairWageData,
         disbursementData
