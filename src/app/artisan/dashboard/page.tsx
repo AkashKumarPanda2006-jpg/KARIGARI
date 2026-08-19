@@ -283,7 +283,7 @@ export default function ArtisanDashboard() {
           setIsCrossCheckModalOpen(false);
           fetchDashboardData();
         }} 
-        item={selectedSellItem || selectedCrossCheckItem} 
+        item={selectedItem} 
       />
       <DisputeModal 
         isOpen={isDisputeModalOpen} 
