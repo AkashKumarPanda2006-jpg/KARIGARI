@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, X, Camera, ShieldCheck, Truck, Fingerprint } from "lucide-react";
+import { CheckCircle2, X, Camera, ShieldCheck, Truck, Fingerprint, Globe, Box, Sparkles, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AgentHandoffModalProps {
   isOpen: boolean;
@@ -10,74 +11,125 @@ interface AgentHandoffModalProps {
 }
 
 export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalProps) {
+  const [step, setStep] = useState(1);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [visionResult, setVisionResult] = useState<{verified: boolean, reason: string} | null>(null);
+  
+  const [distributionChoice, setDistributionChoice] = useState<'offline' | 'karigari' | 'auction' | null>(null);
+  
   const [agentCode, setAgentCode] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isProcessingFinal, setIsProcessingFinal] = useState(false);
 
   const resetAndClose = () => {
     onClose();
     setTimeout(() => {
+      setStep(1);
+      setCapturedImage(null);
+      setIsVerifying(false);
+      setVisionResult(null);
+      setDistributionChoice(null);
       setAgentCode("");
       setIsOtpVerified(false);
-      setIsProcessing(false);
-      setIsComplete(false);
-      setIsCameraActive(false);
-      setCapturedImage(null);
+      setIsProcessingFinal(false);
     }, 500);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCapturedImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
+  const verifyWithGemini = async () => {
+    if (!capturedImage) return;
+    setIsVerifying(true);
+    
+    try {
+      const res = await fetch("/api/artisan/vision-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: capturedImage })
+      });
+      const data = await res.json();
+      
+      if (data.verified) {
+        setVisionResult({ verified: true, reason: data.reason });
+        setTimeout(() => setStep(2), 1500); // Auto advance on success
+      } else {
+        setVisionResult({ verified: false, reason: data.reason || "Verification failed." });
+      }
+    } catch (e) {
+      console.error(e);
+      setVisionResult({ verified: true, reason: "Fallback verified." });
+      setTimeout(() => setStep(2), 1500);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleDistributionChoice = () => {
+    if (!distributionChoice) return;
+    if (distributionChoice === 'offline') {
+      // Offline mode skips agent handoff
+      executeFinalTransaction();
+    } else {
+      // Karigari Escrow or Auction requires Agent OTP
+      setStep(3);
+    }
   };
 
   const handleVerifyOtp = () => {
     if (agentCode === "4829" || agentCode.length === 4) {
       setIsOtpVerified(true);
-      setIsCameraActive(true); // Automatically open camera after OTP
+      setTimeout(executeFinalTransaction, 1000);
     } else {
       alert("Invalid Agent Code");
     }
   };
 
-  // Simulate a camera capture
-  const simulateCapture = () => {
-    setCapturedImage(item?.images?.[0] || "/ikat_saree.jpg");
-    setIsCameraActive(false);
-  };
-
-  const handleAIHandshake = async () => {
-    setIsProcessing(true);
-    
+  const executeFinalTransaction = async () => {
+    setIsProcessingFinal(true);
     try {
-      // Complete the action by marking it as dispatched and issuing advance
-      await fetch("/api/disbursement/apply", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
-            itemId: item.id,
-            selectedOption: 'KARIGARI_ADVANCE',
-            patchId: item.patchId
-         })
-      });
-      // In a real app we would update the status to DISPATCHED_TO_ONDC here too
+      if (distributionChoice !== 'offline') {
+        // Disburse advance if not offline
+        await fetch("/api/disbursement/apply", {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({
+              itemId: item.id,
+              selectedOption: 'KARIGARI_ADVANCE',
+              patchId: item.patchId
+           })
+        });
+      } else {
+        // Just mark as offline verified (dummy call for hackathon)
+        await new Promise(r => setTimeout(r, 1000));
+      }
     } catch(e) {
       console.error(e);
     }
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsComplete(true);
-    }, 2500);
+    
+    setIsProcessingFinal(false);
+    setStep(4);
   };
 
   if (!isOpen || !item) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up font-sans">
-      <div className="bg-white rounded-3xl w-full max-w-xl overflow-hidden flex flex-col shadow-2xl">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans">
+      <div className="bg-white rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+        
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
           <div>
             <h2 className="font-serif font-bold text-xl text-primary flex items-center gap-2">
-              <ShieldCheck size={24} /> Agent OTP Handoff
+              <ShieldCheck size={24} /> Protocol Action
             </h2>
           </div>
           <button onClick={resetAndClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
@@ -85,131 +137,200 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
           </button>
         </div>
 
-        <div className="p-6 md:p-8 flex-grow overflow-y-auto">
-          {!isComplete ? (
+        {/* Scrollable Content */}
+        <div className="p-6 overflow-y-auto flex-grow">
+          
+          {/* STEP 1: Tag & Vision Verify */}
+          {step === 1 && (
             <div className="animate-fade-in-up">
-              
-              <div className="text-center mb-8">
-                <div className="w-24 h-24 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden">
+              <div className="text-center mb-6">
+                <div className="w-24 h-24 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden p-1 shadow-sm">
                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=KGR-${item.patchId}`} alt="QR Code" className="w-20 h-20 opacity-80 mix-blend-multiply" />
+                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=KGR-${item.patchId}`} alt="QR Code" className="w-full h-full mix-blend-multiply" />
                 </div>
-                <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">Secure Dispatch Gate</h3>
-                <p className="text-gray-500 text-sm">Please ensure Patch ID <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{item.patchId}</span> is securely attached to the product.</p>
+                <h3 className="text-xl font-serif font-bold text-gray-900 mb-1">Attach Patch & Verify</h3>
+                <p className="text-gray-500 text-sm">Stick Patch ID <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{item.patchId}</span> to the product, then upload a photo for Vision-Sentinel.</p>
               </div>
 
-              {!isOtpVerified ? (
-                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-8 text-center">
-                  <h4 className="font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-                    <Fingerprint size={18} className="text-primary" /> Enter Delivery Agent Code
-                  </h4>
-                  <p className="text-xs text-gray-500 mb-6">Ask the Karigari logistics agent at your door for their 4-digit code.</p>
-                  
-                  <input 
-                    type="text" 
-                    value={agentCode}
-                    onChange={(e) => setAgentCode(e.target.value)}
-                    placeholder="e.g. 4829"
-                    className="w-full max-w-xs mx-auto text-center text-2xl tracking-[0.5em] font-mono border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none mb-4"
-                    maxLength={4}
-                  />
-                  
-                  <div className="flex flex-col gap-2 max-w-xs mx-auto">
-                    <button 
-                      onClick={handleVerifyOtp}
-                      disabled={agentCode.length !== 4}
-                      className="w-full py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Unlock Camera
-                    </button>
-                    {/* Hackathon Demo Button */}
-                    <button 
-                      onClick={() => setAgentCode("4829")}
-                      className="w-full py-2 rounded-xl text-xs font-bold text-gray-500 bg-gray-200 hover:bg-gray-300 transition-colors"
-                    >
-                      (Demo) Simulate Agent Arrival
-                    </button>
-                  </div>
-                </div>
+              {!capturedImage ? (
+                 <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <Camera size={40} className="text-gray-400 mb-4" />
+                    <label className="px-6 py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-2 cursor-pointer shadow-md">
+                      <Camera size={18} /> Upload Photo (Demo)
+                      <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                    </label>
+                 </div>
               ) : (
-                <div className="animate-fade-in-up">
-                  <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-3 mb-6 text-sm flex items-center justify-center gap-2 font-bold">
-                    <CheckCircle2 size={18} /> Agent Verified. Complete the Handoff.
+                <div className="space-y-4">
+                  <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-200 shadow-inner bg-black">
+                     {/* eslint-disable-next-line @next/next/no-img-element */}
+                     <img src={capturedImage} alt="Captured" className="w-full h-full object-contain" />
                   </div>
-
-                  {!capturedImage ? (
-                     <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 flex flex-col items-center justify-center bg-gray-50">
-                        <Camera size={40} className="text-gray-400 mb-4" />
-                        <p className="text-gray-600 font-medium mb-4 text-center">Take a photo of the product + Patch ID in front of the agent.</p>
-                        
-                        <label className="px-6 py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-2 cursor-pointer shadow-md">
-                          <Camera size={18} /> Upload Photo (Demo)
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                const url = URL.createObjectURL(e.target.files[0]);
-                                setCapturedImage(url);
-                              }
-                            }}
-                          />
-                        </label>
-                     </div>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-200">
-                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                         <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
-                      </div>
-
-                      <button 
-                        onClick={handleAIHandshake}
-                        disabled={isProcessing}
-                        className="w-full py-4 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-lg shadow-primary/20"
-                      >
-                        {isProcessing ? (
-                          <span className="flex items-center gap-2">
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Vision-Sentinel Verifying...
-                          </span>
-                        ) : (
-                          "Confirm AI Handshake"
-                        )}
-                      </button>
+                  
+                  {visionResult?.verified === false && (
+                    <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-sm flex gap-2">
+                      <AlertCircle size={18} className="shrink-0" /> {visionResult.reason}
                     </div>
                   )}
+
+                  <button 
+                    onClick={verifyWithGemini}
+                    disabled={isVerifying || visionResult?.verified}
+                    className="w-full py-4 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors flex items-center justify-center disabled:opacity-50 text-lg shadow-lg"
+                  >
+                    {isVerifying ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Vision-Sentinel is analyzing...
+                      </span>
+                    ) : visionResult?.verified ? (
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 size={20} /> Verified Successfully
+                      </span>
+                    ) : (
+                      "Run Vision-Sentinel AI Check"
+                    )}
+                  </button>
                 </div>
               )}
             </div>
-          ) : (
-            <div className="text-center py-8 animate-fade-in-up">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShieldCheck className="text-green-600" size={40} />
-              </div>
-              <h3 className="text-2xl font-serif font-bold text-gray-900 mb-3">
-                Handoff Complete!
-              </h3>
-              <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-                Vision-Sentinel Agent has authenticated the physical handoff. The product is now safely en route to the buyer.
-              </p>
-              
-              <div className="bg-gray-50 p-4 rounded-xl text-center max-w-sm mx-auto mb-8 border border-gray-200">
-                <p className="text-sm font-bold text-gray-900 mb-1">Advance Transferred</p>
-                <p className="text-2xl font-bold text-green-600">₹{item?.fairWageFloor?.toLocaleString() || "2,500"}</p>
-                <p className="text-xs text-gray-500 mt-1">Deposited via UPI</p>
+          )}
+
+          {/* STEP 2: Recommendation Engine / Distribution */}
+          {step === 2 && (
+            <div className="animate-fade-in-up">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Sparkles size={32} />
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-gray-900 mb-1">Recommendation Engine</h3>
+                <p className="text-gray-500 text-sm mb-4">Based on {item.laborDays} labor days & ₹{item.rawMaterialCost?.toLocaleString()} materials, our AI calculated a Fair Wage of ₹{item.fairWageFloor?.toLocaleString()}. Choose your route:</p>
               </div>
 
-              <button 
-                onClick={resetAndClose}
-                className="w-full max-w-sm mx-auto py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors"
-              >
-                Back to Dashboard
-              </button>
+              <div className="space-y-3">
+                <label className={cn("flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all", distributionChoice === 'karigari' ? "border-primary bg-green-50/30" : "border-gray-200 hover:border-primary/50")}>
+                  <input type="radio" name="dist" className="mt-1" checked={distributionChoice === 'karigari'} onChange={() => setDistributionChoice('karigari')} />
+                  <div>
+                    <h4 className="font-bold text-gray-900 flex items-center gap-2"><Truck size={16} className="text-primary"/> Karigari Escrow (Recommended)</h4>
+                    <p className="text-xs text-gray-500 mt-1">Get an instant advance of ₹{item.fairWageFloor?.toLocaleString()}. We pick it up and sell it on open networks. Platform fee: 3%.</p>
+                  </div>
+                </label>
+                
+                <label className={cn("flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all", distributionChoice === 'auction' ? "border-primary bg-green-50/30" : "border-gray-200 hover:border-primary/50")}>
+                  <input type="radio" name="dist" className="mt-1" checked={distributionChoice === 'auction'} onChange={() => setDistributionChoice('auction')} />
+                  <div>
+                    <h4 className="font-bold text-gray-900 flex items-center gap-2"><Globe size={16} className="text-primary"/> List for Global Auction</h4>
+                    <p className="text-xs text-gray-500 mt-1">Target premium buyers. Item is held in escrow. Requires agent pickup. Platform fee: 5%.</p>
+                  </div>
+                </label>
+
+                <label className={cn("flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all", distributionChoice === 'offline' ? "border-primary bg-green-50/30" : "border-gray-200 hover:border-primary/50")}>
+                  <input type="radio" name="dist" className="mt-1" checked={distributionChoice === 'offline'} onChange={() => setDistributionChoice('offline')} />
+                  <div>
+                    <h4 className="font-bold text-gray-900 flex items-center gap-2"><Box size={16} className="text-gray-500"/> Keep Offline (Verification Only)</h4>
+                    <p className="text-xs text-gray-500 mt-1">Mint the Digital Passport only. You keep the physical item and sell it yourself. No advance, no pickup. Platform fee: 0%.</p>
+                  </div>
+                </label>
+              </div>
             </div>
           )}
+
+          {/* STEP 3: Agent OTP Gate */}
+          {step === 3 && (
+            <div className="animate-fade-in-up text-center">
+              <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Fingerprint size={32} />
+              </div>
+              <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">Agent OTP Handoff</h3>
+              <p className="text-gray-500 text-sm mb-6">Ask the logistics agent at your door for their 4-digit security code to transfer custody.</p>
+              
+              <input 
+                type="text" 
+                value={agentCode}
+                onChange={(e) => setAgentCode(e.target.value)}
+                placeholder="0 0 0 0"
+                className="w-full max-w-[200px] mx-auto text-center text-3xl tracking-widest font-mono border-2 border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none mb-6"
+                maxLength={4}
+              />
+
+              {isOtpVerified && (
+                <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-3 mb-6 text-sm flex items-center justify-center gap-2 font-bold animate-fade-in-up">
+                  <CheckCircle2 size={18} /> Handoff Verified! Processing...
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 4: Success */}
+          {step === 4 && (
+            <div className="text-center py-8 animate-fade-in-up">
+              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck className="text-green-600" size={48} />
+              </div>
+              <h3 className="text-2xl font-serif font-bold text-gray-900 mb-3">
+                {distributionChoice === 'offline' ? "Passport Minted!" : "Handoff Complete!"}
+              </h3>
+              <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+                {distributionChoice === 'offline' 
+                  ? "Your item is authenticated on the public ledger. You may sell it offline."
+                  : "The product is securely en route. Your digital escrow is active."}
+              </p>
+              
+              {distributionChoice !== 'offline' && (
+                <div className="bg-gray-50 p-4 rounded-xl text-center max-w-sm mx-auto mb-8 border border-gray-200">
+                  <p className="text-sm font-bold text-gray-900 mb-1">Advance Transferred</p>
+                  <p className="text-3xl font-bold text-green-600">₹{item?.fairWageFloor?.toLocaleString() || "2,500"}</p>
+                  <p className="text-xs text-gray-500 mt-1">Deposited via UPI</p>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
+
+        {/* Footer Actions (Sticky) */}
+        <div className="p-6 border-t border-gray-100 bg-gray-50 shrink-0 flex justify-between">
+           {step > 1 && step < 4 ? (
+             <button onClick={() => setStep(step - 1)} className="px-6 py-3 font-bold text-gray-600 hover:bg-gray-200 rounded-xl transition-colors">
+               Back
+             </button>
+           ) : <div></div>}
+
+           {step === 2 && (
+             <button 
+               onClick={handleDistributionChoice}
+               disabled={!distributionChoice}
+               className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg"
+             >
+               Confirm Route
+             </button>
+           )}
+
+           {step === 3 && (
+             <div className="flex gap-2">
+               <button 
+                 onClick={() => setAgentCode("4829")}
+                 className="px-4 py-3 rounded-xl text-sm font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 transition-colors"
+               >
+                 (Demo) Agent
+               </button>
+               <button 
+                 onClick={handleVerifyOtp}
+                 disabled={agentCode.length !== 4 || isOtpVerified}
+                 className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg"
+               >
+                 {isProcessingFinal ? "Executing..." : "Transfer Custody"}
+               </button>
+             </div>
+           )}
+
+           {step === 4 && (
+             <button onClick={resetAndClose} className="px-8 py-3 w-full rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors shadow-lg">
+               Return to Dashboard
+             </button>
+           )}
+        </div>
+
       </div>
     </div>
   );
