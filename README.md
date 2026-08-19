@@ -16,7 +16,9 @@ Karigari is not just an e-commerce storefront—it is an **AI-driven Verificatio
 4. **👁️ AI Vision Gate (Cross-Check):** Before an artisan can sell, they must upload a photo of the product with the tag attached. AI Vision verifies the match, preventing tag-swapping fraud.
 5. **🔀 Aggregator Routing Engine:** The artisan transfers digital selling rights to Karigari in exchange for an immediate upfront advance (secured by a liquidity pool). Karigari then routes the product to the most profitable channel (ONDC integration, B2B boutique, or Karigari custody).
 6. **🏛️ Immutable Govt Ledger & Oversight:** The Super Admin dashboard tracks a `Regional Economic Health Index`, sorting cooperatives in a Min-Heap. The government can instantly see which regions are falling behind on fair wage compliance.
-7. **🚨 Counterfeit Dispute Resolution:** If an item is flagged by a buyer, the artisan is shown side-by-side visual evidence. They must confirm under penalty of a platform ban before requesting a Super Admin review, eliminating frivolous disputes.
+7. **🛡️ Counterfeit Dispute Resolution:** If an item is flagged by a buyer, the artisan is shown side-by-side visual evidence. They must confirm under penalty of a platform ban before requesting a Super Admin review, eliminating frivolous disputes.
+8. **📈 Live Economic Analytics & Trends:** The Admin and Artisan dashboards dynamically compute 7-day trailing trends across sales, advances, captures, and regional compliance, powered by real-time aggregation algorithms.
+9. **🕵️ Privacy-First PII Masking & Ledger Tracking:** The system securely masks sensitive artisan identities (names, UPIs) on administrative channels while mapping a completely transparent, step-by-step blockchain-style audit log of every custody handoff and UPI disbursement event.
 
 ## 🛠️ Tech Stack
 - **Frontend:** Next.js 15 (App Router), React, Tailwind CSS, Lucide Icons

@@ -210,13 +210,13 @@ export default function ArtisanDashboard() {
           <h1 className="text-2xl font-serif font-bold text-gray-900">{t('dashboard_title')}</h1>
         </div>
 
-        {/* Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <MetricCard title={t('my_captures')} value={dashboardData ? dashboardData.myCapturesCount.toString() : "..."} icon={<Package />} trend="+2" />
-          <MetricCard title={t('advances_received')} value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} icon={<Banknote />} trend="+15%" />
-          <MetricCard title={t('items_sold')} value={dashboardData ? dashboardData.itemsSold.toString() : "..."} icon={<HandCoins />} trend="+1" />
-          <MetricCard title={t('total_earnings')} value={dashboardData ? `₹${dashboardData.totalEarnings.toLocaleString()}` : "..."} icon={<TrendingUp />} trend="+22%" />
-        </div>
+          {/* Metrics */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <MetricCard title={t('my_captures')} value={dashboardData ? dashboardData.myCapturesCount.toString() : "..."} icon={<Package />} trend={dashboardData?.trends?.captures || ""} />
+            <MetricCard title={t('advances_received')} value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} icon={<Banknote />} trend={dashboardData?.trends?.advances || ""} />
+            <MetricCard title={t('items_sold')} value={dashboardData ? dashboardData.itemsSold.toString() : "..."} icon={<HandCoins />} trend={dashboardData?.trends?.sold || ""} />
+            <MetricCard title={t('total_earnings')} value={dashboardData ? `₹${dashboardData.totalEarnings.toLocaleString()}` : "..."} icon={<TrendingUp />} trend={dashboardData?.trends?.earnings || ""} />
+          </div>
 
         {/* Recent Captures Table */}
         <div className="flex justify-between items-end mb-4 mt-12">
@@ -332,13 +332,16 @@ function MetricCard({ title, value, icon, trend }: { title: string, value: strin
         <div className="w-10 h-10 rounded-xl bg-gray-50 text-primary flex items-center justify-center">
           {icon}
         </div>
-        <div className="flex items-center text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">
-          <TrendingUp size={12} className="mr-1" />
-          {trend}
-        </div>
       </div>
       <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-      <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+      <div className="flex items-end justify-between">
+        <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+        {trend && (
+          <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded-md">
+            {trend}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

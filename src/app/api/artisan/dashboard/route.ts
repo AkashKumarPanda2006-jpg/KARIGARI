@@ -77,6 +77,34 @@ export async function GET(req: Request) {
       take: 10
     });
 
+    // 6. Trends (past 7 days)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const pastWeekCaptures = await prisma.craftItem.count({
+      where: { artisanId, createdAt: { gte: oneWeekAgo } }
+    });
+
+    const pastWeekAdvancedItems = await prisma.craftItem.findMany({
+      where: { 
+        artisanId,
+        status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] },
+        createdAt: { gte: oneWeekAgo }
+      },
+      select: { advancePaid: true, fairWageFloor: true }
+    });
+    const pastWeekAdvances = pastWeekAdvancedItems.reduce((sum, item) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
+
+    const pastWeekSold = await prisma.craftItem.count({
+      where: { artisanId, status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] }, createdAt: { gte: oneWeekAgo } }
+    });
+
+    const pastWeekQueued = await prisma.craftItem.aggregate({
+      _sum: { finalPayoutQueued: true },
+      where: { artisanId, status: 'SOLD_FINAL', createdAt: { gte: oneWeekAgo } }
+    });
+    const pastWeekEarnings = pastWeekAdvances + (pastWeekQueued._sum.finalPayoutQueued || 0);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -88,7 +116,13 @@ export async function GET(req: Request) {
         totalEarnings,
         healthScore: user?.artisanProfile?.healthScore ?? 100,
         accountStatus: user?.accountStatus ?? 'ACTIVE',
-        recentCaptures
+        recentCaptures,
+        trends: {
+          captures: `+${pastWeekCaptures}`,
+          advances: `+₹${pastWeekAdvances.toLocaleString()}`,
+          sold: `+${pastWeekSold}`,
+          earnings: `+₹${pastWeekEarnings.toLocaleString()}`
+        }
       }
     });
   } catch (error: any) {
