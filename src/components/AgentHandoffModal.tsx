@@ -90,11 +90,12 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
             <div className="animate-fade-in-up">
               
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Truck size={32} />
+                <div className="w-24 h-24 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden">
+                   {/* eslint-disable-next-line @next/next/no-img-element */}
+                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=KGR-${item.patchId}`} alt="QR Code" className="w-20 h-20 opacity-80 mix-blend-multiply" />
                 </div>
                 <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">Secure Dispatch Gate</h3>
-                <p className="text-gray-500 text-sm">Please ensure Patch ID <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{item.patchId}</span> is securely attached.</p>
+                <p className="text-gray-500 text-sm">Please ensure Patch ID <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{item.patchId}</span> is securely attached to the product.</p>
               </div>
 
               {!isOtpVerified ? (
@@ -140,12 +141,21 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                      <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 flex flex-col items-center justify-center bg-gray-50">
                         <Camera size={40} className="text-gray-400 mb-4" />
                         <p className="text-gray-600 font-medium mb-4 text-center">Take a photo of the product + Patch ID in front of the agent.</p>
-                        <button 
-                          onClick={simulateCapture}
-                          className="px-6 py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-2"
-                        >
-                          <Camera size={18} /> Open Camera
-                        </button>
+                        
+                        <label className="px-6 py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary-dark transition-all flex items-center gap-2 cursor-pointer shadow-md">
+                          <Camera size={18} /> Upload Photo (Demo)
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const url = URL.createObjectURL(e.target.files[0]);
+                                setCapturedImage(url);
+                              }
+                            }}
+                          />
+                        </label>
                      </div>
                   ) : (
                     <div className="space-y-6">
