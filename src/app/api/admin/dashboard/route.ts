@@ -56,7 +56,7 @@ export async function GET(req: Request) {
     const pastWeekItemsSold = await prisma.craftItem.count({
       where: { 
         status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] },
-        updatedAt: { gte: oneWeekAgo }
+        createdAt: { gte: oneWeekAgo }
       }
     });
 
@@ -64,7 +64,7 @@ export async function GET(req: Request) {
       _sum: { advancePaid: true },
       where: { 
         status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] },
-        updatedAt: { gte: oneWeekAgo }
+        createdAt: { gte: oneWeekAgo }
       }
     });
     const pastWeekAdvances = pastWeekAdvancesQuery._sum.advancePaid || 0;
