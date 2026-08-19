@@ -255,7 +255,7 @@ export default function ArtisanDashboard() {
                         }}
                         onCrossCheck={() => {
                           setSelectedItem(item);
-                          setIsCrossCheckOpen(true);
+                          setIsCrossCheckModalOpen(true);
                         }}
                         onDispute={() => {
                           setSelectedItem(item);
