@@ -65,10 +65,10 @@ export async function POST(req: Request) {
       craftItemId: itemId,
       actorId: decoded.userId,
       actorRole: 'ADMIN',
-      action: 'ITEM_SOLD_FINAL',
+      action: 'UPI_PAYMENT_PROCESSED',
       previousState: { status: item.status },
       newState: { status: 'SOLD_FINAL', salePrice },
-      comments: `Item sold to buyer for ₹${salePrice.toLocaleString()}. Final payout of ₹${finalPayoutQueued.toLocaleString()} queued for artisan.`
+      comments: `UPI Payment processed for buyer sale: ₹${salePrice.toLocaleString()}. Final direct payout of ₹${finalPayoutQueued.toLocaleString()} disbursed to artisan's linked bank account.`
     });
 
     return NextResponse.json({ success: true, item: updatedItem });

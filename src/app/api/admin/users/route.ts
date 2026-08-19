@@ -34,6 +34,13 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
+    users.forEach(u => {
+      u.name = u.name.substring(0, 2) + "***";
+      if (u.artisanProfile && u.artisanProfile.upiId) {
+        u.artisanProfile.upiId = u.artisanProfile.upiId.substring(0, 3) + "***@upi";
+      }
+    });
+
     return NextResponse.json({ success: true, users });
   } catch (error: any) {
     console.error('Users API Error:', error);

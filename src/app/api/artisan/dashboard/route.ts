@@ -38,15 +38,16 @@ export async function GET(req: Request) {
       where: { artisanId }
     });
 
-    // 2. Advances Received
-    const advances = await prisma.craftItem.aggregate({
-      _sum: { advancePaid: true },
+    // 2. Advances Received (with fallback for past items without advancePaid explicitly set)
+    const advancedItems = await prisma.craftItem.findMany({
       where: { 
         artisanId,
         status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } 
-      }
+      },
+      select: { advancePaid: true, fairWageFloor: true }
     });
-    const totalAdvances = advances._sum.advancePaid || 0;
+    
+    const totalAdvances = advancedItems.reduce((sum, item) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
 
     // 3. Items Sold (SOLD_FINAL or SOLD_MIDDLEMAN)
     const itemsSold = await prisma.craftItem.count({

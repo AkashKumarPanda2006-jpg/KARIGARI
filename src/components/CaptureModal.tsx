@@ -17,7 +17,7 @@ type Message = { id: string; role: "assistant" | "user"; text: string; isProcess
 
 export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [step, setStep] = useState(1);
   const [isListening, setIsListening] = useState(false);
   const [isProcessed, setIsProcessed] = useState(false);
@@ -163,7 +163,13 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'hi-IN'; // Uses Hindi engine but typically captures multiple regional languages accurately.
+    const langMap: Record<string, string> = {
+      en: 'en-IN',
+      hi: 'hi-IN',
+      or: 'or-IN',
+      te: 'te-IN'
+    };
+    recognition.lang = langMap[language] || 'hi-IN';
     recognition.interimResults = true;
     recognition.continuous = true;
 

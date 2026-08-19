@@ -208,9 +208,9 @@ export default function AdminDashboard() {
           {/* 5 Top Metric Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             <AdminMetricCard title="Total Artisans" value={dashboardData ? dashboardData.totalArtisans.toString() : "..."} trend="+12" trendPositive />
-            <AdminMetricCard title="Items Captured" value="612" trend="+45" trendPositive />
+            <AdminMetricCard title="Items Captured" value={dashboardData ? dashboardData.itemsCaptured.toString() : "..."} trend="+45" trendPositive />
             <AdminMetricCard title="Advances Disbursed" value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} trend="+15%" trendPositive />
-            <AdminMetricCard title="Items Sold" value="325" trend="+24" trendPositive />
+            <AdminMetricCard title="Items Sold" value={dashboardData ? dashboardData.itemsSold.toString() : "..."} trend="+24" trendPositive />
             <AdminMetricCard title="Regional Econ Health" value={dashboardData ? `${dashboardData.complianceRate}%` : "..."} trend="-1%" trendPositive={false} />
           </div>
 
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={fairWageData}
+                      data={dashboardData?.fairWageData || []}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
                       dataKey="value"
                       stroke="none"
                     >
-                      {fairWageData.map((entry, index) => (
+                      {(dashboardData?.fairWageData || []).map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
                 
                 {/* Custom Legend */}
                 <div className="flex flex-col gap-2 mt-2">
-                  {fairWageData.map((item, i) => (
+                  {(dashboardData?.fairWageData || []).map((item: any, i: number) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
@@ -276,7 +276,7 @@ export default function AdminDashboard() {
               
               <div className="flex-grow min-h-[250px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={disbursementData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <LineChart data={dashboardData?.disbursementData || []} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis 
                       dataKey="day" 
@@ -466,11 +466,20 @@ export default function AdminDashboard() {
                 <Link href="#" className="text-xs text-primary font-bold hover:underline">Full Leaderboard</Link>
               </div>
               <div className="flex flex-col gap-4 flex-grow overflow-y-auto">
-                <LeaderboardRow rank={1} name="Sunita R." earnings="₹89,540" items={12} image="/female_artisan.jpg" />
-                <LeaderboardRow rank={2} name="Ramesh D." earnings="₹84,200" items={15} />
-                <LeaderboardRow rank={3} name="Laxmi S." earnings="₹76,800" items={9} />
-                <LeaderboardRow rank={4} name="Krishna M." earnings="₹65,450" items={11} />
-                <LeaderboardRow rank={5} name="Bhavani G." earnings="₹61,200" items={8} />
+                {dashboardData?.leaderboard?.length > 0 ? (
+                  dashboardData.leaderboard.map((artisan: any, index: number) => (
+                    <LeaderboardRow 
+                      key={artisan.id} 
+                      rank={index + 1} 
+                      name={artisan.name} 
+                      earnings={`₹${artisan.earnings.toLocaleString()}`} 
+                      items={artisan.items} 
+                      image={artisan.image} 
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No data available.</p>
+                )}
               </div>
             </div>
 
@@ -486,12 +495,23 @@ export default function AdminDashboard() {
                   </h3>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <AlertRow icon={<AlertTriangle />} type="Duplicate Item" item="Ikat Saree #9F8X" severity="high" />
-                  <AlertRow icon={<HelpCircle />} type="Patch Tampered" item="Silk Scarf #2B4C" severity="medium" />
+                  {dashboardData?.alerts?.length > 0 ? (
+                    dashboardData.alerts.slice(0,3).map((alert: any) => (
+                      <AlertRow 
+                        key={alert.id} 
+                        icon={<AlertTriangle />} 
+                        type={alert.status === 'FLAGGED' ? "Counterfeit Alert" : (alert.failedScanCount > 0 ? "Resolved Incident" : "Fairness Alert")} 
+                        item={`${alert.craftType} #${alert.id.substring(0,4)}`} 
+                        severity={alert.status === 'FLAGGED' ? "high" : "medium"} 
+                      />
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No recent alerts.</p>
+                  )}
                 </div>
-                <button className="mt-4 w-full text-center text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg transition-colors">
+                <Link href="/admin/alerts" className="mt-4 block w-full text-center text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 py-2 rounded-lg transition-colors">
                   Review All Alerts
-                </button>
+                </Link>
               </div>
 
               {/* Patch Inventory */}

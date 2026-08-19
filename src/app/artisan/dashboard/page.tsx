@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, Globe, ChevronDown, TrendingUp, Package, HandCoins, Banknote, MoreHorizontal, LogOut, X, ShieldAlert } from "lucide-react";
+import { Bell, Globe, ChevronDown, TrendingUp, Package, HandCoins, Banknote, MoreHorizontal, LogOut, X, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { CaptureModal } from "@/components/CaptureModal";
 import { SellModal } from "@/components/SellModal";
 import { ProfileEditorModal } from "@/components/ProfileEditorModal";
@@ -177,20 +178,31 @@ export default function ArtisanDashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Top Banner */}
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-8 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center shrink-0">
-              <TrendingUp size={20} />
+        {/* Top Banner - Artisan Health & Credit Risk */}
+        <div className={cn("rounded-2xl p-4 mb-8 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm border", flaggedItems.length > 0 ? "bg-orange-50 border-orange-200" : "bg-green-50 border-green-200")}>
+          <div className="flex items-center gap-4 w-full">
+            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0", flaggedItems.length > 0 ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600")}>
+              <ShieldCheck size={24} />
             </div>
-            <div>
-              <p className="font-bold text-green-900">You have 2 new recommendations</p>
-              <p className="text-sm text-green-700">Check the best options for your new captures.</p>
+            <div className="flex-grow">
+              <div className="flex justify-between items-end mb-1">
+                <p className={cn("font-bold", flaggedItems.length > 0 ? "text-orange-900" : "text-green-900")}>Artisan Trust Health</p>
+                <span className={cn("font-bold text-sm", flaggedItems.length > 0 ? "text-orange-700" : "text-green-700")}>{Math.max(0, 100 - (flaggedItems.length * 15))}%</span>
+              </div>
+              <div className="w-full bg-white rounded-full h-2.5 shadow-inner overflow-hidden border border-gray-100">
+                <div 
+                  className={cn("h-2.5 rounded-full transition-all duration-1000", flaggedItems.length > 0 ? "bg-orange-500" : "bg-green-500")} 
+                  style={{ width: `${Math.max(0, 100 - (flaggedItems.length * 15))}%` }}
+                ></div>
+              </div>
+            </div>
+            <div className="pl-6 border-l border-gray-200 hidden sm:block shrink-0 min-w-[150px]">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Credit Risk</p>
+              <p className={cn("font-bold text-lg", flaggedItems.length > 0 ? (flaggedItems.length >= 3 ? "text-red-600" : "text-orange-600") : "text-green-600")}>
+                {flaggedItems.length === 0 ? "Low Risk" : flaggedItems.length >= 3 ? "High Risk" : "Medium Risk"}
+              </p>
             </div>
           </div>
-          <button className="whitespace-nowrap bg-white text-green-700 border border-green-200 hover:bg-green-100 px-4 py-2 rounded-full text-sm font-bold transition-colors">
-            View Now
-          </button>
         </div>
 
         {/* Action Bar */}
@@ -200,9 +212,9 @@ export default function ArtisanDashboard() {
 
         {/* Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <MetricCard title="My Captures" value={dashboardData ? dashboardData.myCapturesCount.toString() : "..."} icon={<Package />} trend="+2" />
-          <MetricCard title="Advances Received" value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} icon={<Banknote />} trend="+15%" />
-          <MetricCard title="Items Sold" value={dashboardData ? dashboardData.itemsSold.toString() : "..."} icon={<HandCoins />} trend="+1" />
+          <MetricCard title={t('my_captures')} value={dashboardData ? dashboardData.myCapturesCount.toString() : "..."} icon={<Package />} trend="+2" />
+          <MetricCard title={t('advances_received')} value={dashboardData ? `₹${dashboardData.totalAdvances.toLocaleString()}` : "..."} icon={<Banknote />} trend="+15%" />
+          <MetricCard title={t('items_sold')} value={dashboardData ? dashboardData.itemsSold.toString() : "..."} icon={<HandCoins />} trend="+1" />
           <MetricCard title={t('total_earnings')} value={dashboardData ? `₹${dashboardData.totalEarnings.toLocaleString()}` : "..."} icon={<TrendingUp />} trend="+22%" />
         </div>
 
@@ -225,11 +237,11 @@ export default function ArtisanDashboard() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/50 text-gray-500 text-xs uppercase tracking-wider">
-                  <th className="px-6 py-4 font-medium">Item</th>
-                  <th className="px-6 py-4 font-medium">Capture ID</th>
+                  <th className="px-6 py-4 font-medium">{t('craft_details')}</th>
+                  <th className="px-6 py-4 font-medium">{t('blockchain_patch_id')}</th>
                   <th className="px-6 py-4 font-medium">{t('date')}</th>
                   <th className="px-6 py-4 font-medium">{t('status')}</th>
-                  <th className="px-6 py-4 font-medium text-right">Action</th>
+                  <th className="px-6 py-4 font-medium text-right">{t('action')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -331,12 +343,13 @@ function MetricCard({ title, value, icon, trend }: { title: string, value: strin
   );
 }
 
-function TableRow({ title, id, date, status, statusColor, image, onView, onSell, onCrossCheck, onDispute }: { title: string, id: string, date: string, status: string, statusColor: string, image: string, onView: () => void, onSell: () => void, onCrossCheck: () => void, onDispute?: () => void }) {
+function TableRow({ title, id, date, status, statusColor, image, onView, onSell, onCrossCheck, onDispute }: any) {
+  const { t } = useLanguage();
   return (
-    <tr className="hover:bg-gray-50/50 transition-colors">
+    <tr className="hover:bg-gray-50/50 transition-colors group">
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0 relative">
+          <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
             <Image src={image} alt={title} fill className="object-cover" />
           </div>
           <span className="font-bold text-gray-900 text-sm">{title}</span>
@@ -356,12 +369,12 @@ function TableRow({ title, id, date, status, statusColor, image, onView, onSell,
               onClick={onCrossCheck}
               className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap shadow-sm"
             >
-              Initiate Agent Handoff
+              {t('initiate_handoff')}
             </button>
           )}
           {status === 'PENDING_VERIFICATION' && (
             <span className="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full flex items-center gap-1 border border-orange-200 whitespace-nowrap">
-              <ShieldAlert size={14} /> Pending Admin
+              <ShieldAlert size={14} /> {t('pending_admin')}
             </span>
           )}
           {status === 'FLAGGED' && (
@@ -369,14 +382,14 @@ function TableRow({ title, id, date, status, statusColor, image, onView, onSell,
               onClick={onDispute}
               className="text-sm font-bold text-white bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap shadow-sm"
             >
-              Review Counterfeit
+              {t('flagged')}
             </button>
           )}
           <button 
             onClick={onView}
             className="text-sm font-bold text-primary border border-primary hover:bg-primary-light/10 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap"
           >
-            View Details
+            {t('view_details')}
           </button>
         </div>
       </td>
@@ -412,7 +425,7 @@ function DetailsModal({ item, onClose }: { item: any, onClose: () => void }) {
             </div>
             <div className="bg-green-50 p-4 rounded-xl border border-green-100">
               <span className="text-xs text-green-600 font-bold uppercase tracking-wider block mb-1">Advance Received</span>
-              <span className="font-bold text-xl text-green-700">₹{item.advancePaid?.toLocaleString() || 0}</span>
+              <span className="font-bold text-xl text-green-700">₹{item.advancePaid?.toLocaleString() || item.fairWageFloor?.toLocaleString() || 0}</span>
             </div>
           </div>
           

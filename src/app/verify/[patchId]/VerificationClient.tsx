@@ -179,6 +179,11 @@ export function VerificationClient({ item, patchId }: { item: any, patchId: stri
                   <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-gray-100 bg-gray-50 shadow-sm">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-bold text-sm text-gray-900">{log.action.replace(/_/g, ' ')}</span>
+                      {log.actorRole && (
+                        <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded">
+                          {log.actorRole}
+                        </span>
+                      )}
                     </div>
                     <time className="text-xs font-medium text-blue-500 mb-2 block">
                       {new Date(log.createdAt).toLocaleDateString()} at {new Date(log.createdAt).toLocaleTimeString()}

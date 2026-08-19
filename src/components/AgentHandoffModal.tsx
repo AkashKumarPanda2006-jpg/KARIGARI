@@ -4,6 +4,8 @@ import { useState } from "react";
 import { CheckCircle2, X, Camera, ShieldCheck, Truck, Fingerprint, Globe, Box, Sparkles, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { useLanguage } from "@/lib/translations";
+
 interface AgentHandoffModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,6 +13,7 @@ interface AgentHandoffModalProps {
 }
 
 export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalProps) {
+  const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -129,7 +132,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
           <div>
             <h2 className="font-serif font-bold text-xl text-primary flex items-center gap-2">
-              <ShieldCheck size={24} /> Protocol Action
+              <ShieldCheck size={24} /> {t('protocol_action')}
             </h2>
           </div>
           <button onClick={resetAndClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
@@ -146,9 +149,13 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
               <div className="text-center mb-6">
                 <div className="w-24 h-24 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden p-1 shadow-sm">
                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=KGR-${item.patchId}`} alt="QR Code" className="w-full h-full mix-blend-multiply" />
+                   <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/verify/${item.patchId}` : `http://localhost:3000/verify/${item.patchId}`)}`} 
+                      alt="QR Code" 
+                      className="w-full h-full mix-blend-multiply" 
+                   />
                 </div>
-                <h3 className="text-xl font-serif font-bold text-gray-900 mb-1">Attach Patch & Verify</h3>
+                <h3 className="text-xl font-serif font-bold text-gray-900 mb-1">{t('attach_patch_verify')}</h3>
                 <p className="text-gray-500 text-sm">Stick Patch ID <span className="font-mono font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">{item.patchId}</span> to the product, then upload a photo for Vision-Sentinel.</p>
               </div>
 
@@ -203,8 +210,8 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
                   <Sparkles size={32} />
                 </div>
-                <h3 className="text-2xl font-serif font-bold text-gray-900 mb-1">Recommendation Engine</h3>
-                <p className="text-gray-500 text-sm mb-4">Based on {item.laborDays} labor days & ₹{item.rawMaterialCost?.toLocaleString()} materials, our AI calculated a Fair Wage of ₹{item.fairWageFloor?.toLocaleString()}. Choose your route:</p>
+                <h3 className="text-2xl font-serif font-bold text-gray-900 mb-1">{t('recommendation_engine')}</h3>
+                <p className="text-gray-500 text-sm mb-4">Based on market analysis, we recommend routing this product for maximum yield. All sales on Karigari incur a standard 3% platform fee.</p>
               </div>
 
               <div className="space-y-3">
@@ -212,7 +219,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                   <input type="radio" name="dist" className="mt-1" checked={distributionChoice === 'karigari'} onChange={() => setDistributionChoice('karigari')} />
                   <div>
                     <h4 className="font-bold text-gray-900 flex items-center gap-2"><Truck size={16} className="text-primary"/> Karigari Escrow (Recommended)</h4>
-                    <p className="text-xs text-gray-500 mt-1">Get an instant advance of ₹{item.fairWageFloor?.toLocaleString()}. We pick it up and sell it on open networks. Platform fee: 3%.</p>
+                    <p className="text-xs text-gray-500 mt-1">Get an instant advance of ₹{item.fairWageFloor?.toLocaleString()} to cover your fair wage. The remaining profit is deposited once the item sells.</p>
                   </div>
                 </label>
                 
@@ -220,7 +227,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                   <input type="radio" name="dist" className="mt-1" checked={distributionChoice === 'auction'} onChange={() => setDistributionChoice('auction')} />
                   <div>
                     <h4 className="font-bold text-gray-900 flex items-center gap-2"><Globe size={16} className="text-primary"/> List for Global Auction</h4>
-                    <p className="text-xs text-gray-500 mt-1">Target premium buyers. Item is held in escrow. Requires agent pickup. Platform fee: 5%.</p>
+                    <p className="text-xs text-gray-500 mt-1">Target premium buyers. There is a waiting period for this option, and you will not receive an instant advance.</p>
                   </div>
                 </label>
 
@@ -228,7 +235,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                   <input type="radio" name="dist" className="mt-1" checked={distributionChoice === 'offline'} onChange={() => setDistributionChoice('offline')} />
                   <div>
                     <h4 className="font-bold text-gray-900 flex items-center gap-2"><Box size={16} className="text-gray-500"/> Keep Offline (Verification Only)</h4>
-                    <p className="text-xs text-gray-500 mt-1">Mint the Digital Passport only. You keep the physical item and sell it yourself. No advance, no pickup. Platform fee: 0%.</p>
+                    <p className="text-xs text-gray-500 mt-1">It is up to you to sell it physically. You must update us on the platform once it is sold.</p>
                   </div>
                 </label>
               </div>
@@ -241,7 +248,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
               <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Fingerprint size={32} />
               </div>
-              <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">Agent OTP Handoff</h3>
+              <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">{t('agent_otp_handoff')}</h3>
               <p className="text-gray-500 text-sm mb-6">Ask the logistics agent at your door for their 4-digit security code to transfer custody.</p>
               
               <input 
@@ -277,10 +284,31 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
               </p>
               
               {distributionChoice !== 'offline' && (
-                <div className="bg-gray-50 p-4 rounded-xl text-center max-w-sm mx-auto mb-8 border border-gray-200">
-                  <p className="text-sm font-bold text-gray-900 mb-1">Advance Transferred</p>
-                  <p className="text-3xl font-bold text-green-600">₹{item?.fairWageFloor?.toLocaleString() || "2,500"}</p>
-                  <p className="text-xs text-gray-500 mt-1">Deposited via UPI</p>
+                <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-5 text-left max-w-sm mx-auto mb-8 shadow-sm">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
+                    <span className="text-sm font-bold text-gray-500">Estimated Market Price</span>
+                    <span className="font-bold text-gray-900">₹{item?.marketPriceMin?.toLocaleString() || "5,000"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                      <span className="text-sm font-bold text-green-700">Advance (Processing Now)</span>
+                    </div>
+                    <span className="font-bold text-green-700">₹{item?.fairWageFloor?.toLocaleString() || "2,500"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+                      <span className="text-sm font-bold text-orange-600">Queued Payout (Remaining)</span>
+                    </div>
+                    <span className="font-bold text-orange-600">₹{((item?.marketPriceMin || 5000) - (item?.fairWageFloor || 2500)).toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-gray-100 text-center bg-gray-50 -mx-5 -mb-5 px-5 py-3 rounded-b-2xl">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Secure Transfer via UPI</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -302,7 +330,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                disabled={!distributionChoice}
                className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg"
              >
-               Confirm Route
+               {t('confirm_route')}
              </button>
            )}
 
@@ -319,7 +347,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                  disabled={agentCode.length !== 4 || isOtpVerified}
                  className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg"
                >
-                 {isProcessingFinal ? "Executing..." : "Transfer Custody"}
+                 {isProcessingFinal ? "Executing..." : t('transfer_custody')}
                </button>
              </div>
            )}

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { ArrowLeft, ScrollText, Search, Clock, ShieldCheck, Banknote, AlertTriangle, Download, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ScrollText, Search, Clock, ShieldCheck, Banknote, AlertTriangle, Download, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 
@@ -75,9 +75,12 @@ export default async function AuditLogsPage({
           } else if (log.action.includes('VERIFIED')) {
             icon = <ShieldCheck size={16} className="text-green-500" />;
             colorClass = "bg-green-50 border-green-200";
-          } else if (log.action.includes('SOLD_FINAL') || log.action.includes('DISBURSEMENT')) {
+          } else if (log.action.includes('SOLD_FINAL') || log.action.includes('DISBURSEMENT') || log.action.includes('UPI_PAYMENT')) {
             icon = <Banknote size={16} className="text-green-600" />;
             colorClass = "bg-green-100 border-green-300";
+          } else if (log.action.includes('AGENT_HANDOFF')) {
+            icon = <CheckCircle2 size={16} className="text-purple-500" />;
+            colorClass = "bg-purple-50 border-purple-200";
           } else if (log.action.includes('FLAGGED')) {
             icon = <AlertTriangle size={16} className="text-red-500" />;
             colorClass = "bg-red-50 border-red-200";

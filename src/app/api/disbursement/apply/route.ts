@@ -76,11 +76,11 @@ export async function POST(req: Request) {
         prisma: tx as any,
         craftItemId: itemId,
         actorId: decoded.userId,
-        actorRole: 'ARTISAN',
-        action: 'ITEM_MINTED_AND_SOLD',
+        actorRole: 'Artisan cum Agent',
+        action: 'AGENT_HANDOFF_COMPLETED',
         previousState: { status: item.status },
         newState: { status: newStatus, patchId: patchId },
-        comments: `Artisan selected ${selectedOption}. Received advance: ₹${advancePaid.toLocaleString()}. Patch ID: ${patchId} minted.`
+        comments: `Agent verified product custody. Route selected: ${selectedOption}. Advance triggered: ₹${advancePaid.toLocaleString()}. Patch ID: ${patchId} minted.`
       });
 
       // Implement +2.5% Health Score Gain for successful authentic sale
