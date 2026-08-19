@@ -395,7 +395,7 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
                         <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }}></span>
                         <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }}></span>
                       </div>
-                      <span className="text-gray-500 text-sm font-medium">Gemini is parsing your craft...</span>
+                      <span className="text-gray-500 text-sm font-medium">Voice-Scribe Agent is parsing your craft...</span>
                     </div>
                   </div>
                 )}
@@ -409,7 +409,7 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
                     <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-green-200 shadow-sm space-y-3 w-full">
                       <div className="flex items-center justify-between pb-2 border-b border-gray-100">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                          <Sparkles size={12}/> Gemini Translation
+                          <Sparkles size={12}/> Voice-Scribe Output
                         </span>
                         {sourceLanguage && <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md text-[10px] font-bold border border-gray-200">{sourceLanguage} Detected</span>}
                       </div>
@@ -487,7 +487,7 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
               {isVerifyingVision && (
                 <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-xl mb-6 text-sm flex gap-3 items-center shadow-sm">
                   <div className="w-5 h-5 border-2 border-yellow-400 border-t-yellow-800 rounded-full animate-spin"></div>
-                  <p className="font-bold">Running AI Vision Verification...</p>
+                  <p className="font-bold">Vision-Sentinel Agent is verifying authenticity...</p>
                 </div>
               )}
 

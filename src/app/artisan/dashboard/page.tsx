@@ -10,6 +10,7 @@ import { SellModal } from "@/components/SellModal";
 import { ProfileEditorModal } from "@/components/ProfileEditorModal";
 import { CrossCheckModal } from "@/components/CrossCheckModal";
 import { DisputeModal } from "@/components/DisputeModal";
+import { AgentHandoffModal } from "@/components/AgentHandoffModal";
 import { useLanguage } from "@/lib/translations";
 
 export default function ArtisanDashboard() {
@@ -249,15 +250,15 @@ export default function ArtisanDashboard() {
                         image={item.images?.[0] || "/ikat_saree.jpg"}
                         onView={() => setSelectedItem(item)}
                         onSell={() => {
-                          setSelectedSellItem(item);
+                          setSelectedItem(item);
                           setIsSellModalOpen(true);
                         }}
                         onCrossCheck={() => {
-                          setSelectedCrossCheckItem(item);
-                          setIsCrossCheckModalOpen(true);
+                          setSelectedItem(item);
+                          setIsCrossCheckOpen(true);
                         }}
                         onDispute={() => {
-                          setSelectedDisputeItem(item);
+                          setSelectedItem(item);
                           setIsDisputeModalOpen(true);
                         }}
                       />
@@ -275,14 +276,14 @@ export default function ArtisanDashboard() {
       </main>
 
       <CaptureModal isOpen={isModalOpen} onClose={handleModalClose} />
-      <SellModal isOpen={isSellModalOpen} onClose={handleSellModalClose} item={selectedSellItem} />
-      <CrossCheckModal 
-        isOpen={isCrossCheckModalOpen} 
+      <AgentHandoffModal 
+        isOpen={isSellModalOpen || isCrossCheckModalOpen} 
         onClose={() => {
+          setIsSellModalOpen(false);
           setIsCrossCheckModalOpen(false);
           fetchDashboardData();
         }} 
-        item={selectedCrossCheckItem} 
+        item={selectedSellItem || selectedCrossCheckItem} 
       />
       <DisputeModal 
         isOpen={isDisputeModalOpen} 
@@ -348,15 +349,7 @@ function TableRow({ title, id, date, status, statusColor, image, onView, onSell,
               onClick={onCrossCheck}
               className="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap shadow-sm"
             >
-              Attach QR & Cross-Check
-            </button>
-          )}
-          {status === 'TAG_ATTACHED' && (
-            <button 
-              onClick={onSell}
-              className="text-sm font-bold text-white bg-green-600 hover:bg-green-700 px-4 py-1.5 rounded-full transition-colors whitespace-nowrap shadow-sm"
-            >
-              Transfer Rights
+              Initiate Agent Handoff
             </button>
           )}
           {status === 'PENDING_VERIFICATION' && (
