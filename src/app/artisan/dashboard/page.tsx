@@ -20,6 +20,7 @@ export default function ArtisanDashboard() {
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [isCrossCheckModalOpen, setIsCrossCheckModalOpen] = useState(false);
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -248,7 +249,10 @@ export default function ArtisanDashboard() {
                         status={item.status} 
                         statusColor={color} 
                         image={item.images?.[0] || "/ikat_saree.jpg"}
-                        onView={() => setSelectedItem(item)}
+                        onView={() => {
+                          setSelectedItem(item);
+                          setIsDetailsModalOpen(true);
+                        }}
                         onSell={() => {
                           setSelectedItem(item);
                           setIsSellModalOpen(true);
@@ -296,10 +300,13 @@ export default function ArtisanDashboard() {
         artisanData={dashboardData?.artisanProfile} 
         onSaved={fetchDashboardData} 
       />
-      {selectedItem && (
+      {isDetailsModalOpen && selectedItem && (
         <DetailsModal 
           item={selectedItem} 
-          onClose={() => setSelectedItem(null)} 
+          onClose={() => {
+            setIsDetailsModalOpen(false);
+            setSelectedItem(null);
+          }} 
         />
       )}
     </div>
