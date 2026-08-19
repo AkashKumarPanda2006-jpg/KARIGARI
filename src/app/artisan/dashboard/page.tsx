@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, Globe, ChevronDown, TrendingUp, Package, HandCoins, Banknote, MoreHorizontal, LogOut, X } from "lucide-react";
+import { Bell, Globe, ChevronDown, TrendingUp, Package, HandCoins, Banknote, MoreHorizontal, LogOut, X, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CaptureModal } from "@/components/CaptureModal";
 import { SellModal } from "@/components/SellModal";
