@@ -5,7 +5,7 @@ import Link from "next/link";
 import { 
   LayoutDashboard, Users, Package, Banknote, History, ShieldAlert, Tag, 
   Settings, UserCog, ScrollText, Search, Calendar, Download, Menu, Bell,
-  TrendingUp, Activity, CheckCircle2, AlertTriangle, HelpCircle, LogOut
+  TrendingUp, Activity, CheckCircle2, AlertTriangle, HelpCircle, LogOut, Clock, ShieldCheck
 } from "lucide-react";
 import Image from "next/image";
 import { 
@@ -223,23 +223,24 @@ export default function AdminDashboard() {
                   <h3 className="font-bold text-gray-900">Regional Economic Health</h3>
                   <p className="text-xs text-gray-500">Average Final Price vs AI Fair Wage Floor</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
-                  <span className="font-bold text-green-600 text-sm">92%</span>
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <span className="font-bold text-primary text-sm">{dashboardData?.complianceRate || 0}%</span>
                 </div>
               </div>
               
-              <div className="flex-grow relative flex flex-col justify-center min-h-[220px]">
+              <div className="flex-grow relative flex flex-col justify-center min-h-[240px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={dashboardData?.fairWageData || []}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
+                      innerRadius={65}
+                      outerRadius={95}
+                      paddingAngle={3}
                       dataKey="value"
                       stroke="none"
+                      cornerRadius={4}
                     >
                       {(dashboardData?.fairWageData || []).map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -247,10 +248,14 @@ export default function AdminDashboard() {
                     </Pie>
                     <RechartsTooltip 
                       formatter={(value) => [`${value}%`, 'Share']}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mb-10">
+                  <span className="text-3xl font-black text-gray-800">{dashboardData?.complianceRate || 0}%</span>
+                  <span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase">Health</span>
+                </div>
                 
                 {/* Custom Legend */}
                 <div className="flex flex-col gap-2 mt-2">
@@ -565,22 +570,44 @@ export default function AdminDashboard() {
               </h4>
               <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[11px] before:h-full before:w-[2px] before:bg-gray-200">
                 {saleModalItem.auditLogs && saleModalItem.auditLogs.length > 0 ? (
-                  saleModalItem.auditLogs.map((log: any) => (
-                    <div key={log.id} className="relative flex items-start gap-4">
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-blue-100 text-blue-500 shrink-0 z-10">
-                        <CheckCircle2 size={12} />
+                  saleModalItem.auditLogs.map((log: any) => {
+                    let icon = <Clock size={12} />;
+                    let colorClass = "bg-gray-100 text-gray-500 border-white";
+                    
+                    if (log.action.includes('CAPTURE')) {
+                      icon = <ScrollText size={12} />;
+                      colorClass = "bg-blue-100 text-blue-500 border-white";
+                    } else if (log.action.includes('VERIFIED')) {
+                      icon = <ShieldCheck size={12} />;
+                      colorClass = "bg-green-100 text-green-500 border-white";
+                    } else if (log.action.includes('SOLD_FINAL') || log.action.includes('DISBURSEMENT') || log.action.includes('UPI_PAYMENT')) {
+                      icon = <Banknote size={12} />;
+                      colorClass = "bg-green-100 text-green-600 border-white";
+                    } else if (log.action.includes('AGENT_HANDOFF')) {
+                      icon = <CheckCircle2 size={12} />;
+                      colorClass = "bg-purple-100 text-purple-500 border-white";
+                    } else if (log.action.includes('FLAGGED')) {
+                      icon = <AlertTriangle size={12} />;
+                      colorClass = "bg-red-100 text-red-500 border-white";
+                    }
+
+                    return (
+                      <div key={log.id} className="relative flex items-start gap-4">
+                        <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 shrink-0 z-10 ${colorClass}`}>
+                          {icon}
+                        </div>
+                        <div className="pb-2">
+                          <span className="font-bold text-xs text-gray-900">{log.action.replace(/_/g, ' ')}</span>
+                          <time className="text-[10px] font-medium text-gray-500 block">
+                            {new Date(log.createdAt).toLocaleDateString()} at {new Date(log.createdAt).toLocaleTimeString()}
+                          </time>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {log.comments || `State updated to ${log.newState?.status || 'Unknown'}`}
+                          </p>
+                        </div>
                       </div>
-                      <div className="pb-2">
-                        <span className="font-bold text-xs text-gray-900">{log.action.replace(/_/g, ' ')}</span>
-                        <time className="text-[10px] font-medium text-gray-500 block">
-                          {new Date(log.createdAt).toLocaleDateString()} at {new Date(log.createdAt).toLocaleTimeString()}
-                        </time>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {log.comments || `State updated to ${log.newState?.status || 'Unknown'}`}
-                        </p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <p className="text-xs text-gray-500 italic">No timeline events found.</p>
                 )}
