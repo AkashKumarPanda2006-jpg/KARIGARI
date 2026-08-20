@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 export async function PUT(req: Request) {
   try {
-    const { photoUrl, upiId, description } = await req.json();
+    const { name, photoUrl, upiId, description } = await req.json();
     
     // Auth Check
     const cookieStore = await cookies();
@@ -26,6 +26,13 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
     const userId = decoded.userId;
+
+    if (name) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { name }
+      });
+    }
 
     // Upsert ArtisanProfile
     const profile = await prisma.artisanProfile.upsert({

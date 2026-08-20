@@ -309,7 +309,7 @@ export default function ArtisanDashboard() {
       <ProfileEditorModal 
         isOpen={isProfileEditorOpen} 
         onClose={() => setIsProfileEditorOpen(false)} 
-        artisanData={dashboardData?.artisanProfile} 
+        artisanData={{...dashboardData?.artisanProfile, name: dashboardData?.artisanName}} 
         onSaved={fetchDashboardData} 
       />
       {isDetailsModalOpen && selectedItem && (
@@ -401,11 +401,12 @@ function TableRow({ title, id, date, status, statusColor, image, onView, onSell,
 }
 
 function DetailsModal({ item, onClose }: { item: any, onClose: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
       <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <h2 className="font-serif font-bold text-lg text-primary">Transaction Details</h2>
+          <h2 className="font-serif font-bold text-lg text-primary">{t('transaction_details')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
             <X size={20} />
           </button>
@@ -423,33 +424,33 @@ function DetailsModal({ item, onClose }: { item: any, onClose: () => void }) {
           
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Status</span>
+              <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">{t('status')}</span>
               <span className="font-medium text-gray-800">{item.status.replace(/_/g, ' ')}</span>
             </div>
             <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-              <span className="text-xs text-green-600 font-bold uppercase tracking-wider block mb-1">Advance Received</span>
-              <span className="font-bold text-xl text-green-700">₹{item.advancePaid?.toLocaleString() || item.fairWageFloor?.toLocaleString() || 0}</span>
+              <span className="text-xs text-green-600 font-bold uppercase tracking-wider block mb-1">{t('advance_received')}</span>
+              <span className="font-bold text-xl text-green-700">₹{item.advancePaid > 0 ? item.advancePaid.toLocaleString() : (item.fairWageFloor?.toLocaleString() || 0)}</span>
             </div>
           </div>
           
           <div className="space-y-3">
             <div className="flex justify-between text-sm py-2 border-b border-gray-100">
-              <span className="text-gray-500">Total Valuation Band</span>
+              <span className="text-gray-500">{t('total_valuation_band')}</span>
               <span className="font-medium">₹{item.marketPriceMin?.toLocaleString()} - ₹{item.marketPriceMax?.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm py-2 border-b border-gray-100">
-              <span className="text-gray-500">Labor Days</span>
-              <span className="font-medium">{item.laborDays} Days</span>
+              <span className="text-gray-500">{t('labor_days')}</span>
+              <span className="font-medium">{item.laborDays} {t('days')}</span>
             </div>
             <div className="flex justify-between text-sm py-2">
-              <span className="text-gray-500">Material Cost</span>
+              <span className="text-gray-500">{t('material_cost')}</span>
               <span className="font-medium">₹{item.rawMaterialCost?.toLocaleString()}</span>
             </div>
           </div>
         </div>
         <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
           <button onClick={onClose} className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-full transition-colors">
-            Close
+            {t('close_btn')}
           </button>
         </div>
       </div>

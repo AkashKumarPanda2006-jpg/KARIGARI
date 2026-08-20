@@ -29,10 +29,14 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      setMessages([{ id: '1', role: "assistant", text: t('assistant_intro') }]);
+    if (isOpen) {
+      if (messages.length === 0) {
+        setMessages([{ id: '1', role: "assistant", text: t('assistant_intro') }]);
+      } else if (messages.length > 0 && messages[0].id === '1' && messages[0].text !== t('assistant_intro')) {
+        setMessages(prev => [{ ...prev[0], text: t('assistant_intro') }, ...prev.slice(1)]);
+      }
     }
-  }, [isOpen, t, messages.length]);
+  }, [isOpen, t, messages]);
   
   // Form Data extracted from Voice
   const [originalTranscript, setOriginalTranscript] = useState<string>("");
@@ -77,12 +81,17 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
   }, [messages, isProcessingAI]);
 
   useEffect(() => {
-    fetch('/api/users/admins').then(r => r.json()).then(d => {
-      if(d.success && d.admins.length > 0) {
-        setAdmins(d.admins);
-        setAssignedAdminId(d.admins[0].id);
-      }
-    });
+    fetch('/api/users/admins')
+      .then(r => r.json())
+      .then(d => {
+        if(d.success && d.admins.length > 0) {
+          setAdmins(d.admins);
+          setAssignedAdminId(d.admins[0].id);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load admins:", err);
+      });
   }, []);
 
   // AI Vision Verification
@@ -238,12 +247,12 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
         setIsProcessed(true);
       } else {
         alert("AI parsing failed.");
-        setMessages(prev => [...prev, { id: Date.now().toString(), role: "assistant", text: "Sorry, I couldn't understand that. Please try again." }]);
+        setMessages(prev => [...prev, { id: Date.now().toString(), role: "assistant", text: t('ai_parsing_failed') }]);
       }
     } catch (e) {
       console.error(e);
       alert("AI processing failed. Please try again.");
-      setMessages(prev => [...prev, { id: Date.now().toString(), role: "assistant", text: "Sorry, there was a network error." }]);
+      setMessages(prev => [...prev, { id: Date.now().toString(), role: "assistant", text: t('ai_parsing_network_error') }]);
     } finally {
       setIsProcessingAI(false);
     }
@@ -463,7 +472,7 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
                           "w-10 h-10 rounded-full flex items-center justify-center transition-all", 
                           isListening 
                             ? "bg-red-50 text-red-500 border border-red-200 animate-pulse shadow-inner" 
-                            : "bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 border border-gray-200 shadow-sm"
+                            : "bg-primary text-white hover:bg-primary-dark shadow-md animate-bounce"
                         )}
                         title={t('start_listening')}
                       >

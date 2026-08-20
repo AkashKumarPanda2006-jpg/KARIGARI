@@ -38,7 +38,7 @@ export function SellModal({ isOpen, onClose, item }: SellModalProps) {
     
     try {
       // Complete the action by applying for the advance and marking it as listed
-      await fetch("/api/disbursement/apply", {
+      const res = await fetch("/api/disbursement/apply", {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({
@@ -47,14 +47,22 @@ export function SellModal({ isOpen, onClose, item }: SellModalProps) {
             patchId: item.patchId
          })
       });
-    } catch(e) {
+      
+      if (res.ok) {
+        setTimeout(() => {
+          setIsProcessing(false);
+          setIsComplete(true);
+        }, 2500);
+      } else {
+        const err = await res.json();
+        alert("Failed to claim advance: " + (err.error || "Unknown error"));
+        setIsProcessing(false);
+      }
+    } catch(e: any) {
       console.error(e);
-    }
-
-    setTimeout(() => {
+      alert("Network error: " + e.message);
       setIsProcessing(false);
-      setIsComplete(true);
-    }, 2500);
+    }
   };
 
   if (!isOpen || !item) return null;

@@ -6,6 +6,13 @@ export type Language = "en" | "hi" | "or" | "te";
 
 export const dictionary: Record<Language, Record<string, string>> = {
   en: {
+    transaction_details: "Transaction Details",
+    advance_received: "Advance Received",
+    total_valuation_band: "Total Valuation Band",
+    labor_days: "Labor Days",
+    material_cost: "Material Cost",
+    close_btn: "Close",
+    days: "Days",
     craft_details: "Craft Details",
     upload_date: "Upload Date",
     blockchain_patch_id: "Blockchain Patch ID",
@@ -45,6 +52,8 @@ export const dictionary: Record<Language, Record<string, string>> = {
     step_6: "Step 6",
     new_craft_capture: "New Craft Capture",
     assistant_intro: "Namaste! Tell me about the craft you've made.",
+    ai_parsing_failed: "Sorry, I couldn't understand that. Please try again.",
+    ai_parsing_network_error: "Sorry, there was a network error.",
     chat_placeholder: "Type or dictate description here...",
     start_listening: "Start Voice Dictation",
     stop_listening: "Stop listening",
@@ -64,6 +73,13 @@ export const dictionary: Record<Language, Record<string, string>> = {
     view_passport: "View Digital Passport",
   },
   hi: {
+    transaction_details: "लेनदेन विवरण",
+    advance_received: "अग्रिम प्राप्त",
+    total_valuation_band: "कुल मूल्यांकन सीमा",
+    labor_days: "श्रम के दिन",
+    material_cost: "सामग्री लागत",
+    close_btn: "बंद करें",
+    days: "दिन",
     craft_details: "शिल्प विवरण",
     upload_date: "अपलोड की तारीख",
     blockchain_patch_id: "ब्लॉकचेन पैच आईडी",
@@ -103,6 +119,8 @@ export const dictionary: Record<Language, Record<string, string>> = {
     step_6: "चरण 6",
     new_craft_capture: "नया शिल्प कैप्चर",
     assistant_intro: "नमस्ते! मुझे अपने बनाए गए शिल्प के बारे में बताएं।",
+    ai_parsing_failed: "क्षमा करें, मुझे समझ नहीं आया। कृपया पुनः प्रयास करें।",
+    ai_parsing_network_error: "क्षमा करें, नेटवर्क त्रुटि हुई।",
     chat_placeholder: "यहां विवरण टाइप करें या बोलें...",
     start_listening: "बोलना शुरू करें",
     stop_listening: "बोलना बंद करें",
@@ -122,6 +140,13 @@ export const dictionary: Record<Language, Record<string, string>> = {
     view_passport: "डिजिटल पासपोर्ट देखें",
   },
   or: {
+    transaction_details: "କାରବାର ବିବରଣୀ",
+    advance_received: "ଅଗ୍ରୀମ ଗ୍ରହଣ",
+    total_valuation_band: "ମୋଟ ମୂଲ୍ୟାଙ୍କନ ବ୍ୟାଣ୍ଡ",
+    labor_days: "ଶ୍ରମ ଦିନ",
+    material_cost: "ସାମଗ୍ରୀ ଖର୍ଚ୍ଚ",
+    close_btn: "ବନ୍ଦ କରନ୍ତୁ",
+    days: "ଦିନ",
     craft_details: "ଶିଳ୍ପ ବିବରଣୀ",
     upload_date: "ଅପଲୋଡ୍ ତାରିଖ",
     blockchain_patch_id: "ବ୍ଲକଚେନ୍ ପ୍ୟାଚ୍ ଆଇଡି",
@@ -161,6 +186,8 @@ export const dictionary: Record<Language, Record<string, string>> = {
     step_6: "ପଦକ୍ଷେପ 6",
     new_craft_capture: "ନୂଆ ଶିଳ୍ପ କ୍ୟାପଚର",
     assistant_intro: "ନମସ୍କାର! ତୁମେ ତିଆରି କରିଥିବା ଶିଳ୍ପ ବିଷୟରେ ମୋତେ କୁହ |",
+    ai_parsing_failed: "କ୍ଷମା କରିବେ, ମୁଁ ବୁଝିପାରିଲି ନାହିଁ। ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+    ai_parsing_network_error: "କ୍ଷମା କରିବେ, ଏକ ନେଟୱର୍କ ତ୍ରୁଟି ହୋଇଛି।",
     chat_placeholder: "ଏଠାରେ ବିବରଣୀ ଟାଇପ୍ କରନ୍ତୁ କିମ୍ବା କୁହନ୍ତୁ...",
     start_listening: "କହିବା ଆରମ୍ଭ କରନ୍ତୁ",
     stop_listening: "କହିବା ବନ୍ଦ କରନ୍ତୁ",
@@ -180,6 +207,13 @@ export const dictionary: Record<Language, Record<string, string>> = {
     view_passport: "ଡିଜିଟାଲ୍ ପାସପୋର୍ଟ ଦେଖନ୍ତୁ",
   },
   te: {
+    transaction_details: "లావాదేవీ వివరాలు",
+    advance_received: "అడ్వాన్స్ అందుకున్నారు",
+    total_valuation_band: "మొత్తం వాల్యుయేషన్ బ్యాండ్",
+    labor_days: "శ్రమ దినాలు",
+    material_cost: "మెటీరియల్ ఖర్చు",
+    close_btn: "మూసివేయి",
+    days: "రోజులు",
     craft_details: "క్రాఫ్ట్ వివరాలు",
     upload_date: "అప్‌లోడ్ తేదీ",
     blockchain_patch_id: "బ్లాక్‌చెయిన్ ప్యాచ్ ID",
@@ -219,6 +253,8 @@ export const dictionary: Record<Language, Record<string, string>> = {
     step_6: "దశ 6",
     new_craft_capture: "కొత్త క్రాఫ్ట్ క్యాప్చర్",
     assistant_intro: "నమస్తే! మీరు తయారు చేసిన క్రాఫ్ట్ గురించి నాకు చెప్పండి.",
+    ai_parsing_failed: "క్షమించండి, నాకు అర్థం కాలేదు. దయచేసి మళ్లీ ప్రయత్నించండి.",
+    ai_parsing_network_error: "క్షమించండి, నెట్‌వర్క్ లోపం ఏర్పడింది.",
     chat_placeholder: "ఇక్కడ వివరణను టైప్ చేయండి లేదా చెప్పండి...",
     start_listening: "మాట్లాడటం ప్రారంభించండి",
     stop_listening: "మాట్లాడటం ఆపండి",
@@ -248,11 +284,20 @@ export function useLanguage() {
     if (saved && dictionary[saved]) {
       setLanguage(saved);
     }
+
+    const handleStorageChange = (e: any) => {
+      if (e.detail && dictionary[e.detail as Language]) {
+        setLanguage(e.detail);
+      }
+    };
+    window.addEventListener('language-change', handleStorageChange);
+    return () => window.removeEventListener('language-change', handleStorageChange);
   }, []);
 
   const changeLanguage = (lang: Language) => {
     localStorage.setItem("karigari_lang", lang);
     setLanguage(lang);
+    window.dispatchEvent(new CustomEvent('language-change', { detail: lang }));
   };
 
   const t = (key: string): string => {

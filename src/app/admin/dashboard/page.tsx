@@ -78,6 +78,14 @@ export default function AdminDashboard() {
     }
   };
 
+  if (!dashboardData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500 font-medium">Loading Dashboard Data...</p>
+      </div>
+    );
+  }
+
   const handleBatchApprove = async (artisanId: string) => {
     // Find all pending item IDs for this artisan
     const itemsToApprove = dashboardData?.pendingCaptures

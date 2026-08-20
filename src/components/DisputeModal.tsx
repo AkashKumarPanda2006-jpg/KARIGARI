@@ -19,15 +19,23 @@ export function DisputeModal({ isOpen, onClose, item }: DisputeModalProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await fetch('/api/artisan/request-review', { 
+      const res = await fetch('/api/artisan/request-review', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itemId: item.id }) 
       });
-      alert("Dispute filed successfully. The Super Admin will review the visual evidence.");
-      window.location.reload();
-    } catch (e) {
+      
+      if (res.ok) {
+        alert("Dispute filed successfully. The Super Admin will review the visual evidence.");
+        window.location.reload();
+      } else {
+        const err = await res.json();
+        alert("Failed to file dispute: " + (err.error || "Unknown error"));
+        setIsSubmitting(false);
+      }
+    } catch (e: any) {
       console.error(e);
+      alert("Network error: " + e.message);
       setIsSubmitting(false);
     }
   };

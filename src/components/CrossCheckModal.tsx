@@ -14,15 +14,23 @@ export function CrossCheckModal({ isOpen, onClose, item, onComplete }: { isOpen:
     
     // Call the backend to update status
     try {
-      await fetch('/api/artisan/cross-check', {
+      const res = await fetch('/api/artisan/cross-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itemId: item.id })
       });
-      setIsProcessing(false);
-      setStep(3);
-    } catch (e) {
+      
+      if (res.ok) {
+        setIsProcessing(false);
+        setStep(3);
+      } else {
+        const err = await res.json();
+        alert("Failed to update status: " + (err.error || "Unknown error"));
+        setIsProcessing(false);
+      }
+    } catch (e: any) {
       console.error(e);
+      alert("Network error: " + e.message);
       setIsProcessing(false);
     }
   };
