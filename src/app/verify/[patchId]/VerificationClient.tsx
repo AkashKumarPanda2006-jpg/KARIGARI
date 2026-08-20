@@ -202,8 +202,8 @@ export function VerificationClient({ item, patchId }: { item: any, patchId: stri
 
       </div>
 
-      <div className="mt-12 text-center text-xs text-gray-400 pb-8">
-        <p>Verified by KARIGARI Cooperative Engine</p>
+      <div className="mt-12 text-center text-gray-500 text-sm pb-8">
+        <p>Verified by KARIGARI Heritage Engine</p>
         <Link href="/" className="hover:text-primary transition-colors underline">Learn more about our mission</Link>
       </div>
 

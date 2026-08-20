@@ -13,7 +13,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "KARIGARI Cooperative",
+  title: "KARIGARI Heritage",
   description: "Fair pay. Proven craft. Every time.",
 };
 
