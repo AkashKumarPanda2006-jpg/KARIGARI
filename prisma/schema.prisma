@@ -23,6 +23,7 @@ model User {
 
   artisanProfile ArtisanProfile?
   craftItems     CraftItem[]
+  schemeApplications SchemeApplication[]
   
   // Admin fields
   patchBankBalance Int @default(5000)
@@ -42,6 +43,15 @@ model ArtisanProfile {
   description     String?
   tags            String[]
   healthScore     Float    @default(100)
+
+  socialCategory  String?
+  annualIncome    Float?
+  aadhaarLast4    String?
+  clusterName     String?
+  giTagCertified  Boolean  @default(false)
+  giTagName       String?
+
+  @@index([socialCategory])
 }
 
 model CraftItem {
@@ -72,7 +82,17 @@ model CraftItem {
   firstFailedScanAt   DateTime?
   failedScanCount     Int      @default(0)
 
+  aiGeneratedListing   String?
+  aiSuggestedCategory  String?
+  giTagApplied         String?
+  isListedOnMarketplace Boolean @default(false)
+
   auditLogs           AuditLog[]
+
+  @@index([artisanId])
+  @@index([patchId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model AuditLog {
@@ -87,3 +107,17 @@ model AuditLog {
   comments      String?
   createdAt     DateTime  @default(now())
 }
+
+model SchemeApplication {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  schemeName String
+  status     String    @default("ELIGIBLE")
+  appliedAt  DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  
+  @@index([userId])
+}
+

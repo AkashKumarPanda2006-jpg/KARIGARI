@@ -28,7 +28,7 @@ export default async function AuditLogsPage({
   }
 
   let searchItem = null;
-  let searchLogs = [];
+  let searchLogs: any[] = [];
 
   // 1. If searching, find specific item
   if (search) {

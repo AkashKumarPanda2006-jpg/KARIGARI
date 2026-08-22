@@ -7,7 +7,7 @@ import Link from "next/link";
 import { VerificationCamera } from "@/components/VerificationCamera";
 
 export function VerificationClient({ item, patchId }: { item: any, patchId: string }) {
-  const [isPurchased, setIsPurchased] = useState(false);
+  const [isPurchased, setIsPurchased] = useState(item.status === 'SOLD_FINAL' || item.status === 'SOLD_MIDDLEMAN');
 
   const artisanName = item.artisan?.name || "Unknown Artisan";
   const artisanProfile = item.artisan?.artisanProfile;
@@ -43,10 +43,7 @@ export function VerificationClient({ item, patchId }: { item: any, patchId: stri
               className="object-cover" 
               priority
             />
-            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
-              <CheckCircle2 size={14} />
-              Verified Item
-            </div>
+            <div className="absolute top-4 right-4 flex flex-col gap-2"><div className="bg-white/90 backdrop-blur-sm text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm"><CheckCircle2 size={14} /> Karigari Verified Product</div><div className="bg-white/90 backdrop-blur-sm text-blue-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm"><ShieldCheck size={14} /> Karigari Verified Artisan</div></div>
           </div>
           
           <div className="p-6">

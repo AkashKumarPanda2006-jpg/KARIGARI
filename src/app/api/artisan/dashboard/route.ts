@@ -26,83 +26,38 @@ export async function GET(req: Request) {
     }
 
     const artisanId = decoded.userId;
-
-    // Fetch user details
-    const user = await prisma.user.findUnique({
-      where: { id: artisanId },
-      include: { artisanProfile: true }
-    });
-
-    // 1. My Captures (total count)
-    const myCapturesCount = await prisma.craftItem.count({
-      where: { artisanId }
-    });
-
-    // 2. Advances Received (with fallback for past items without advancePaid explicitly set)
-    const advancedItems = await prisma.craftItem.findMany({
-      where: { 
-        artisanId,
-        status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } 
-      },
-      select: { advancePaid: true, fairWageFloor: true }
-    });
-    
-    const totalAdvances = advancedItems.reduce((sum, item) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
-
-    // 3. Items Sold (SOLD_FINAL or SOLD_MIDDLEMAN)
-    const itemsSold = await prisma.craftItem.count({
-      where: { 
-        artisanId,
-        status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } 
-      }
-    });
-
-    // 4. Total Earnings
-    // Earnings = advancePaid + finalPayoutQueued (for platform items) 
-    // Wait, if it's SOLD_MIDDLEMAN, the platform didn't track the cash in the ledger.
-    // For simplicity, Total Earnings = sum of advancePaid + sum of finalPayoutQueued
-    const queued = await prisma.craftItem.aggregate({
-      _sum: { finalPayoutQueued: true },
-      where: { 
-        artisanId,
-        status: 'SOLD_FINAL'
-      }
-    });
-    const totalEarnings = totalAdvances + (queued._sum.finalPayoutQueued || 0);
-
-    // 5. Recent Captures (for table)
-    const recentCaptures = await prisma.craftItem.findMany({
-      where: { artisanId },
-      orderBy: { createdAt: 'desc' },
-      take: 10
-    });
-
-    // 6. Trends (past 7 days)
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const pastWeekCaptures = await prisma.craftItem.count({
-      where: { artisanId, createdAt: { gte: oneWeekAgo } }
-    });
+    // Parallelize all independent DB queries to dramatically improve SSR / API response time
+    const [
+      user,
+      myCapturesCount,
+      advancedItems,
+      itemsSold,
+      queued,
+      recentCaptures,
+      pastWeekCaptures,
+      pastWeekAdvancedItems,
+      pastWeekSold,
+      pastWeekQueued
+    ] = await Promise.all([
+      prisma.user.findUnique({ where: { id: artisanId }, include: { artisanProfile: true } }),
+      prisma.craftItem.count({ where: { artisanId } }),
+      prisma.craftItem.findMany({ where: { artisanId, status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } }, select: { advancePaid: true, fairWageFloor: true } }),
+      prisma.craftItem.count({ where: { artisanId, status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } } }),
+      prisma.craftItem.aggregate({ _sum: { finalPayoutQueued: true }, where: { artisanId, status: 'SOLD_FINAL' } }),
+      prisma.craftItem.findMany({ where: { artisanId }, orderBy: { createdAt: 'desc' }, take: 10 }),
+      prisma.craftItem.count({ where: { artisanId, createdAt: { gte: oneWeekAgo } } }),
+      prisma.craftItem.findMany({ where: { artisanId, status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] }, createdAt: { gte: oneWeekAgo } }, select: { advancePaid: true, fairWageFloor: true } }),
+      prisma.craftItem.count({ where: { artisanId, status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] }, createdAt: { gte: oneWeekAgo } } }),
+      prisma.craftItem.aggregate({ _sum: { finalPayoutQueued: true }, where: { artisanId, status: 'SOLD_FINAL', createdAt: { gte: oneWeekAgo } } })
+    ]);
 
-    const pastWeekAdvancedItems = await prisma.craftItem.findMany({
-      where: { 
-        artisanId,
-        status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] },
-        createdAt: { gte: oneWeekAgo }
-      },
-      select: { advancePaid: true, fairWageFloor: true }
-    });
-    const pastWeekAdvances = pastWeekAdvancedItems.reduce((sum, item) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
+    const totalAdvances = advancedItems.reduce((sum: number, item: any) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
+    const totalEarnings = totalAdvances + (queued._sum.finalPayoutQueued || 0);
 
-    const pastWeekSold = await prisma.craftItem.count({
-      where: { artisanId, status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] }, createdAt: { gte: oneWeekAgo } }
-    });
-
-    const pastWeekQueued = await prisma.craftItem.aggregate({
-      _sum: { finalPayoutQueued: true },
-      where: { artisanId, status: 'SOLD_FINAL', createdAt: { gte: oneWeekAgo } }
-    });
+    const pastWeekAdvances = pastWeekAdvancedItems.reduce((sum: number, item: any) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
     const pastWeekEarnings = pastWeekAdvances + (pastWeekQueued._sum.finalPayoutQueued || 0);
 
     return NextResponse.json({

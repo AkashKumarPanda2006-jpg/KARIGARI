@@ -25,53 +25,48 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Forbidden. Admin access required.' }, { status: 403 });
     }
 
-    // 1. Total Artisans
-    const totalArtisans = await prisma.user.count({
-      where: { role: 'ARTISAN' }
-    });
-
-    // 2. Total Advances Disbursed (sum of advancePaid)
-    const advances = await prisma.craftItem.aggregate({
-      _sum: { advancePaid: true },
-      where: { 
-        status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } 
-      }
-    });
-    const totalAdvances = advances._sum.advancePaid || 0;
-
-    // Items metrics
-    const itemsCaptured = await prisma.craftItem.count();
-    const itemsSold = await prisma.craftItem.count({
-      where: { status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } }
-    });
-
-    // Trend calculations (last 7 days)
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    const pastWeekItemsCaptured = await prisma.craftItem.count({
-      where: { createdAt: { gte: oneWeekAgo } }
-    });
-    
-    const pastWeekItemsSold = await prisma.craftItem.count({
-      where: { 
-        status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] },
-        createdAt: { gte: oneWeekAgo }
-      }
-    });
+    // Run queries concurrently
+    const [
+      totalArtisans,
+      advances,
+      itemsCaptured,
+      itemsSold,
+      pastWeekItemsCaptured,
+      pastWeekItemsSold,
+      pastWeekAdvancesQuery,
+      pastWeekArtisans,
+      adminItems,
+      recentCaptures,
+      pendingCaptures,
+      alerts,
+      alertCount,
+      atRiskArtisans,
+      adminUser,
+      allArtisans
+    ] = await Promise.all([
+      prisma.user.count({ where: { role: 'ARTISAN' } }),
+      prisma.craftItem.aggregate({ _sum: { advancePaid: true }, where: { status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } } }),
+      prisma.craftItem.count(),
+      prisma.craftItem.count({ where: { status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } } }),
+      prisma.craftItem.count({ where: { createdAt: { gte: oneWeekAgo } } }),
+      prisma.craftItem.count({ where: { status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] }, createdAt: { gte: oneWeekAgo } } }),
+      prisma.craftItem.aggregate({ _sum: { advancePaid: true }, where: { status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] }, createdAt: { gte: oneWeekAgo } } }),
+      prisma.user.count({ where: { role: 'ARTISAN', createdAt: { gte: oneWeekAgo } } }),
+      prisma.craftItem.findMany({ where: { assignedAdminId: decoded.userId, status: { not: 'PENDING_VERIFICATION' } } }),
+      prisma.craftItem.findMany({ take: 5, orderBy: { createdAt: 'desc' }, where: { status: { not: 'PENDING_VERIFICATION' } }, include: { artisan: { select: { name: true, artisanProfile: true } }, auditLogs: { orderBy: { createdAt: 'desc' } } } }),
+      prisma.craftItem.findMany({ where: { status: 'PENDING_VERIFICATION' }, orderBy: { createdAt: 'desc' }, include: { artisan: { select: { name: true, artisanProfile: true } } } }),
+      prisma.craftItem.findMany({ where: { assignedAdminId: decoded.userId, OR: [ { status: 'FLAGGED' }, { failedScanCount: { gt: 0 } }, { fairnessScore: { lt: 60 } } ] }, include: { auditLogs: { orderBy: { createdAt: 'desc' } } }, orderBy: { createdAt: 'desc' } }),
+      prisma.craftItem.count({ where: { assignedAdminId: decoded.userId, OR: [ { status: 'FLAGGED' }, { fairnessScore: { lt: 60 } } ] } }),
+      prisma.user.findMany({ where: { role: 'ARTISAN', accountStatus: 'ACTIVE', artisanProfile: { healthScore: { lt: 65 } } }, include: { artisanProfile: true } }),
+      prisma.user.findUnique({ where: { id: decoded.userId } }),
+      prisma.user.findMany({ where: { role: 'ARTISAN' }, include: { artisanProfile: true, craftItems: { where: { status: { in: ['ADVANCE_PAID', 'SOLD_FINAL', 'SOLD_MIDDLEMAN'] } }, select: { advancePaid: true, fairWageFloor: true, finalPayoutQueued: true } } } })
+    ]);
 
-    const pastWeekAdvancesQuery = await prisma.craftItem.aggregate({
-      _sum: { advancePaid: true },
-      where: { 
-        status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] },
-        createdAt: { gte: oneWeekAgo }
-      }
-    });
+    const totalAdvances = advances._sum.advancePaid || 0;
     const pastWeekAdvances = pastWeekAdvancesQuery._sum.advancePaid || 0;
-    
-    const pastWeekArtisans = await prisma.user.count({
-      where: { role: 'ARTISAN', createdAt: { gte: oneWeekAgo } }
-    });
 
     const trends = {
       artisans: `+${pastWeekArtisans}`,
@@ -79,133 +74,43 @@ export async function GET(req: Request) {
       sold: `+${pastWeekItemsSold}`,
       advances: `+₹${pastWeekAdvances.toLocaleString()}`
     };
-
-    // 3. Regional Fair Wage Index (Local Admin's specific items)
-    const adminItems = await prisma.craftItem.findMany({
-      where: { 
-        assignedAdminId: decoded.userId,
-        status: { not: 'PENDING_VERIFICATION' }
-      }
-    });
     
     let totalScore = 0;
     if (adminItems.length > 0) {
-      adminItems.forEach(item => {
+      adminItems.forEach((item: any) => {
         const salePrice = item.salePrice || item.fairWageFloor || 0;
         const floor = item.fairWageFloor || 1;
-        // Cap at 100% to prevent inflation gamification
         let score = (salePrice / floor) * 100;
         if (score > 100) score = 100;
         totalScore += score;
       });
     }
     
-    const complianceRate = adminItems.length > 0 
-      ? Math.round(totalScore / adminItems.length) 
-      : 100;
+    const complianceRate = adminItems.length > 0 ? Math.round(totalScore / adminItems.length) : 100;
 
-    const recentCaptures = await prisma.craftItem.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      where: { status: { not: 'PENDING_VERIFICATION' } },
-      include: {
-        artisan: {
-          select: { name: true, artisanProfile: true }
-        },
-        auditLogs: {
-          orderBy: { createdAt: 'desc' }
-        }
-      }
-    });
-
-    const pendingCaptures = await prisma.craftItem.findMany({
-      where: { status: 'PENDING_VERIFICATION' },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        artisan: {
-          select: { name: true, artisanProfile: true }
-        }
-      }
-    });
-
-    // 5. Alerts (Counterfeits or low fairness scores, including resolved ones for this admin)
-    const alerts = await prisma.craftItem.findMany({
-      where: {
-        assignedAdminId: decoded.userId,
-        OR: [
-          { status: 'FLAGGED' },
-          { failedScanCount: { gt: 0 } },
-          { fairnessScore: { lt: 60 } }
-        ]
-      },
-      include: {
-        auditLogs: {
-          orderBy: { createdAt: 'desc' }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-    const alertCount = await prisma.craftItem.count({
-      where: {
-        assignedAdminId: decoded.userId,
-        OR: [
-          { status: 'FLAGGED' },
-          { fairnessScore: { lt: 60 } }
-        ]
-      }
-    });
-
-    // 6. At Risk Artisans (Health < 65%)
-    const atRiskArtisans = await prisma.user.findMany({
-      where: {
-        role: 'ARTISAN',
-        accountStatus: 'ACTIVE',
-        artisanProfile: {
-          healthScore: { lt: 65 }
-        }
-      },
-      include: { artisanProfile: true }
-    });
-    
-    // Mask names for atRiskArtisans
-    atRiskArtisans.forEach(a => {
+    atRiskArtisans.forEach((a: any) => {
       a.name = a.name.substring(0, 2) + "***";
       if (a.artisanProfile && a.artisanProfile.upiId) {
         a.artisanProfile.upiId = a.artisanProfile.upiId.substring(0, 3) + "***@upi";
       }
     });
 
-    // Fetch Admin user details
-    const adminUser = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
-    
-    // 7. Dynamic Leaderboard
-    const allArtisans = await prisma.user.findMany({
-      where: { role: 'ARTISAN' },
-      include: { artisanProfile: true, craftItems: {
-        where: { status: { in: ['ADVANCE_PAID', 'SOLD_FINAL', 'SOLD_MIDDLEMAN'] } },
-        select: { advancePaid: true, fairWageFloor: true, finalPayoutQueued: true }
-      }}
-    });
-    
-    const leaderboard = allArtisans.map(a => {
+    const leaderboard = allArtisans.map((a: any) => {
       let earnings = 0;
-      a.craftItems.forEach(ci => {
+      a.craftItems.forEach((ci: any) => {
         earnings += (ci.advancePaid || ci.fairWageFloor || 0) + (ci.finalPayoutQueued || 0);
       });
       return {
         id: a.id,
-        name: a.name.substring(0, 2) + "***", // Masking name
+        name: a.name.substring(0, 2) + "***",
         image: a.artisanProfile?.photoUrl || "/female_artisan.jpg",
         items: a.craftItems.length,
         earnings
       };
-    }).sort((a, b) => b.earnings - a.earnings).slice(0, 5);
+    }).sort((a: any, b: any) => b.earnings - a.earnings).slice(0, 5);
 
-    // 8. Dynamic Chart Data (Simplified for Demo)
     let above = 0, at = 0, below = 0;
-    adminItems.forEach(item => {
+    adminItems.forEach((item: any) => {
       const sale = item.salePrice || item.standardMarketPrice || item.fairWageFloor || 0;
       const floor = item.fairWageFloor || 1;
       if (sale > floor * 1.1) above++;
@@ -232,12 +137,11 @@ export async function GET(req: Request) {
       { day: "Today", amount: totalAdvances || 1350000 }
     ];
     
-    // Mask names in recentCaptures and pendingCaptures
-    recentCaptures.forEach(rc => {
+    recentCaptures.forEach((rc: any) => {
        if (rc.artisan && rc.artisan.name) rc.artisan.name = rc.artisan.name.substring(0,2) + "***";
        if (rc.artisan?.artisanProfile?.upiId) rc.artisan.artisanProfile.upiId = rc.artisan.artisanProfile.upiId.substring(0,3) + "***@upi";
     });
-    pendingCaptures.forEach(pc => {
+    pendingCaptures.forEach((pc: any) => {
        if (pc.artisan && pc.artisan.name) pc.artisan.name = pc.artisan.name.substring(0,2) + "***";
        if (pc.artisan?.artisanProfile?.upiId) pc.artisan.artisanProfile.upiId = pc.artisan.artisanProfile.upiId.substring(0,3) + "***@upi";
     });

@@ -106,7 +106,7 @@ export default function VerifyBatchPage() {
                 No pending captures require verification.
               </div>
             ) : (
-              Object.entries(groupedByArtisan).map(([artisanId, group]) => (
+              Object.entries(groupedByArtisan).map(([artisanId, group]: any) => (
                 <div key={artisanId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                     <div>
@@ -123,7 +123,7 @@ export default function VerifyBatchPage() {
                   </div>
                   
                   <div className="divide-y divide-gray-100">
-                    {group.items.map((item) => (
+                    {group.items.map((item: any) => (
                       <div key={item.id} className="p-6 flex gap-6">
                         <div className="w-32 h-32 bg-gray-100 rounded-xl overflow-hidden shrink-0 relative border border-gray-200">
                           <Image src={item.images?.[0] || "/ikat_saree.jpg"} alt={item.craftType} fill className="object-cover" />
@@ -170,7 +170,7 @@ export default function VerifyBatchPage() {
             </div>
 
             <div className="space-y-6">
-              {Object.entries(groupedVerified).map(([artisanId, group]) => (
+              {Object.entries(groupedVerified).map(([artisanId, group]: any) => (
                 <div key={artisanId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden opacity-75 hover:opacity-100 transition-opacity">
                   <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                     <div>
@@ -184,7 +184,7 @@ export default function VerifyBatchPage() {
                   </div>
                   
                   <div className="divide-y divide-gray-50">
-                    {group.items.map((item) => (
+                    {group.items.map((item: any) => (
                       <div key={item.id} className="p-4 flex gap-4 items-center">
                         <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden shrink-0 relative border border-gray-200">
                           <Image src={item.images?.[0] || "/ikat_saree.jpg"} alt={item.craftType} fill className="object-cover" />

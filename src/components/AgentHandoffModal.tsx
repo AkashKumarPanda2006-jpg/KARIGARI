@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import QRCode from "react-qr-code";
 import { CheckCircle2, X, Camera, ShieldCheck, Truck, Fingerprint, Globe, Box, Sparkles, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -63,14 +64,14 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
       
       if (data.verified) {
         setVisionResult({ verified: true, reason: data.reason });
-        setTimeout(() => setStep(2), 1500); // Auto advance on success
+        setTimeout(() => setStep(3), 1500); // Auto advance to distribution choice
       } else {
         setVisionResult({ verified: false, reason: data.reason || "Verification failed." });
       }
     } catch (e) {
       console.error(e);
       setVisionResult({ verified: true, reason: "Fallback verified." });
-      setTimeout(() => setStep(2), 1500);
+      setTimeout(() => setStep(3), 1500);
     } finally {
       setIsVerifying(false);
     }
@@ -79,18 +80,17 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
   const handleDistributionChoice = () => {
     if (!distributionChoice) return;
     if (distributionChoice === 'offline') {
-      // Offline mode skips agent handoff
+      // Offline mode skips final escrow
       executeFinalTransaction();
     } else {
-      // Karigari Escrow or Auction requires Agent OTP
-      setStep(3);
+      executeFinalTransaction();
     }
   };
 
   const handleVerifyOtp = () => {
     if (agentCode === "4829" || agentCode.length === 4) {
       setIsOtpVerified(true);
-      setTimeout(executeFinalTransaction, 1000);
+      setTimeout(() => setStep(2), 1000); // Advance to Vision Verify
     } else {
       alert("Invalid Agent Code");
     }
@@ -143,15 +143,40 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
         {/* Scrollable Content */}
         <div className="p-6 overflow-y-auto flex-grow">
           
-          {/* STEP 1: Tag & Vision Verify */}
+          {/* STEP 1 (formerly Step 3): Agent OTP Gate */}
           {step === 1 && (
+            <div className="animate-fade-in-up text-center">
+              <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Fingerprint size={32} />
+              </div>
+              <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">{t('agent_otp_handoff')}</h3>
+              <p className="text-gray-500 text-sm mb-6">Ask the logistics agent at your door for their 4-digit security code to verify their identity before proceeding.</p>
+              
+              <input 
+                type="text" 
+                value={agentCode}
+                onChange={(e) => setAgentCode(e.target.value)}
+                placeholder="0 0 0 0"
+                className="w-full max-w-[200px] mx-auto text-center text-3xl tracking-widest font-mono border-2 border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none mb-6"
+                maxLength={4}
+              />
+
+              {isOtpVerified && (
+                <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-3 mb-6 text-sm flex items-center justify-center gap-2 font-bold animate-fade-in-up">
+                  <CheckCircle2 size={18} /> Agent Verified! Proceeding...
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2 (formerly Step 1): Tag & Vision Verify */}
+          {step === 2 && (
             <div className="animate-fade-in-up">
               <div className="text-center mb-6">
-                <div className="w-24 h-24 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden p-1 shadow-sm">
-                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                   <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/verify/${item.patchId}` : `http://localhost:3000/verify/${item.patchId}`)}`} 
-                      alt="QR Code" 
+                <div className="w-32 h-32 bg-white border-2 border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4 relative overflow-hidden p-2 shadow-sm">
+                   <QRCode 
+                      value={typeof window !== 'undefined' ? \`\${window.location.origin}/verify/\${item.patchId}\` : \`http://localhost:3000/verify/\${item.patchId}\`} 
+                      size={120} 
                       className="w-full h-full mix-blend-multiply" 
                    />
                 </div>
@@ -203,8 +228,8 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
             </div>
           )}
 
-          {/* STEP 2: Recommendation Engine / Distribution */}
-          {step === 2 && (
+          {/* STEP 3 (formerly Step 2): Recommendation Engine / Distribution */}
+          {step === 3 && (
             <div className="animate-fade-in-up">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -239,32 +264,6 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                   </div>
                 </label>
               </div>
-            </div>
-          )}
-
-          {/* STEP 3: Agent OTP Gate */}
-          {step === 3 && (
-            <div className="animate-fade-in-up text-center">
-              <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Fingerprint size={32} />
-              </div>
-              <h3 className="text-2xl font-serif font-bold text-gray-900 mb-2">{t('agent_otp_handoff')}</h3>
-              <p className="text-gray-500 text-sm mb-6">Ask the logistics agent at your door for their 4-digit security code to transfer custody.</p>
-              
-              <input 
-                type="text" 
-                value={agentCode}
-                onChange={(e) => setAgentCode(e.target.value)}
-                placeholder="0 0 0 0"
-                className="w-full max-w-[200px] mx-auto text-center text-3xl tracking-widest font-mono border-2 border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none mb-6"
-                maxLength={4}
-              />
-
-              {isOtpVerified && (
-                <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl p-3 mb-6 text-sm flex items-center justify-center gap-2 font-bold animate-fade-in-up">
-                  <CheckCircle2 size={18} /> Handoff Verified! Processing...
-                </div>
-              )}
             </div>
           )}
 
@@ -324,17 +323,7 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
              </button>
            ) : <div></div>}
 
-           {step === 2 && (
-             <button 
-               onClick={handleDistributionChoice}
-               disabled={!distributionChoice}
-               className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg"
-             >
-               {t('confirm_route')}
-             </button>
-           )}
-
-           {step === 3 && (
+           {step === 1 && (
              <div className="flex gap-2">
                <button 
                  onClick={() => setAgentCode("4829")}
@@ -347,9 +336,28 @@ export function AgentHandoffModal({ isOpen, onClose, item }: AgentHandoffModalPr
                  disabled={agentCode.length !== 4 || isOtpVerified}
                  className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg"
                >
-                 {isProcessingFinal ? "Executing..." : t('transfer_custody')}
+                 Verify Agent OTP
                </button>
              </div>
+           )}
+
+           {step === 2 && (
+             <button 
+                disabled={true} // Auto-advances via Gemini verify
+                className="px-8 py-3 rounded-xl font-bold text-white bg-primary opacity-50 cursor-not-allowed transition-colors shadow-lg"
+             >
+               Verify to Continue
+             </button>
+           )}
+
+           {step === 3 && (
+             <button 
+               onClick={handleDistributionChoice}
+               disabled={!distributionChoice || isProcessingFinal}
+               className="px-8 py-3 rounded-xl font-bold text-white bg-primary hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg"
+             >
+               {isProcessingFinal ? "Processing..." : t('confirm_route')}
+             </button>
            )}
 
            {step === 4 && (
