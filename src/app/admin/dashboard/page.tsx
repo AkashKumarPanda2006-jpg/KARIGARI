@@ -193,13 +193,13 @@ export default function AdminDashboard() {
             />
             <StatCard 
               label="Items Captured" 
-              value={dashboardData ? (dashboardData.itemsCaptured >= 1000 ? \`\${(dashboardData.itemsCaptured / 1000).toFixed(1)}k\` : dashboardData.itemsCaptured) : "..."} 
+              value={dashboardData ? (dashboardData.itemsCaptured >= 1000 ? `\${(dashboardData.itemsCaptured / 1000).toFixed(1)}k` : dashboardData.itemsCaptured) : "..."} 
               icon={<Package size={20} />}
               accentColor="orange"
             />
             <StatCard 
               label="Advances Disbursed" 
-              value={dashboardData ? \`₹\${(dashboardData.totalAdvances / 100000).toFixed(1)}L\` : "..."} 
+              value={dashboardData ? `₹\${(dashboardData.totalAdvances / 100000).toFixed(1)}L` : "..."} 
               icon={<Banknote size={20} />}
               accentColor="blue"
             />
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
                       stroke="none"
                     >
                       {(dashboardData?.fairWageData || []).map((entry: any, index: number) => (
-                        <Cell key={\`cell-\${index}\`} fill={entry.color} />
+                        <Cell key={`cell-\${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <RechartsTooltip />
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-gray-900">₹{artisan.earnings.toLocaleString()}</p>
-                          <p className={\`text-xs \${idx === 2 ? 'text-red-500' : 'text-green-500'}\`}>{idx === 2 ? '-2%' : '+4%'}</p>
+                          <p className={`text-xs \${idx === 2 ? 'text-red-500' : 'text-green-500'}`}>{idx === 2 ? '-2%' : '+4%'}</p>
                         </div>
                       </div>
                     ))
@@ -357,11 +357,11 @@ export default function AdminDashboard() {
                             <td className="py-4 text-sm text-gray-600">{item.craftType}</td>
                             <td className="py-4 text-sm text-gray-600">{new Date(item.createdAt).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}</td>
                             <td className="py-4">
-                              <span className={\`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap \${
+                              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap \${
                                 item.status === 'SOLD_FINAL' ? "bg-gray-100 text-gray-700 border border-gray-200" : 
                                 item.status === 'FLAGGED' ? "bg-red-50 text-red-600 border border-red-100" : 
                                 "bg-gray-100 text-gray-600"
-                              }\`}>
+                              }`}>
                                 {item.status === 'FLAGGED' ? '⚑ Flagged' : item.status.replace('_', ' ')}
                               </span>
                             </td>
@@ -472,17 +472,17 @@ function NavItem({ icon, label, active = false, isOpen, badge, href = "#" }: { i
   return (
     <Link 
       href={href}
-      className={\`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group \${
+      className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group \${
         active 
           ? 'bg-[#2D5016] text-white font-medium' 
           : 'text-white/70 hover:bg-white/10 hover:text-white'
-      } \${!isOpen && 'justify-center'}\`}
+      } \${!isOpen && 'justify-center'}`}
       title={!isOpen ? label : undefined}
     >
-      <div className={\`\${active ? 'text-white' : 'text-white/60 group-hover:text-white'} transition-colors shrink-0\`}>
+      <div className={`\${active ? 'text-white' : 'text-white/60 group-hover:text-white'} transition-colors shrink-0`}>
         {icon}
       </div>
-      <span className={\`whitespace-nowrap transition-all duration-300 \${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}\`}>
+      <span className={`whitespace-nowrap transition-all duration-300 \${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
         {label}
       </span>
       {badge && isOpen && (
@@ -502,7 +502,7 @@ function DemoBar({ label, value, color }: { label: string, value: number, color:
     <div className="flex items-center gap-3 text-xs">
       <span className="w-8 font-bold text-gray-600">{label}</span>
       <div className="flex-grow bg-gray-100 h-2 rounded-full overflow-hidden">
-        <div className={\`\${color} h-full rounded-full\`} style={{ width: \`\${value}%\` }}></div>
+        <div className={`\${color} h-full rounded-full`} style={{ width: `\${value}%` }}></div>
       </div>
       <span className="w-8 text-right font-medium text-gray-500">{value}%</span>
     </div>
