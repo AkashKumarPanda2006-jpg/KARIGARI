@@ -36,6 +36,7 @@ model ArtisanProfile {
   user            User     @relation(fields: [userId], references: [id])
   craftType       String
   location        String
+  mobileNumber    String?
   experienceYears Int
   cooperativeId   String?
   photoUrl        String?

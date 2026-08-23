@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 interface KarigariLogoProps {
   size?: number;
@@ -11,7 +11,7 @@ export function KarigariLogo({ size = 32, showWordmark = false, variant = 'dark'
   const color = variant === 'dark' ? '#1A4731' : '#F5F0E8';
   
   return (
-    <div className={lex items-center gap-2 }>
+    <div className={`flex items-center gap-2 ${className}`}>
       <svg 
         width={size} 
         height={size} 

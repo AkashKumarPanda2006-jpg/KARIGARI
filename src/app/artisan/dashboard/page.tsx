@@ -5,25 +5,21 @@ import Link from "next/link";
 import Image from "next/image";
 import { 
   Bell, Globe, ChevronDown, TrendingUp, Package, HandCoins, Banknote, 
-  MoreHorizontal, LogOut, X, ShieldAlert, ShieldCheck, MapPin, Award, 
-  Camera, FileText, ArrowRightCircle
+  LogOut, X, MapPin, Award, Camera, FileText, ArrowRightCircle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { CaptureModal } from "@/components/CaptureModal";
-import { SellModal } from "@/components/SellModal";
-import { ProfileEditorModal } from "@/components/ProfileEditorModal";
-import { CrossCheckModal } from "@/components/CrossCheckModal";
-import { DisputeModal } from "@/components/DisputeModal";
 import { AgentHandoffModal } from "@/components/AgentHandoffModal";
+import { DisputeModal } from "@/components/DisputeModal";
+import { ProfileEditorModal } from "@/components/ProfileEditorModal";
 import { useLanguage } from "@/lib/translations";
-import { StatCard } from "@/components/ui/StatCard";
 import { KarigariLogo } from "@/components/ui/KarigariLogo";
+import { VoiceOnboarding } from "@/components/VoiceOnboarding";
 
 export default function ArtisanDashboard() {
   const router = useRouter();
   const { t, language, changeLanguage } = useLanguage();
-  const [activeTab, setActiveTab] = useState("workshop");
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
@@ -34,8 +30,6 @@ export default function ArtisanDashboard() {
   
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [selectedSellItem, setSelectedSellItem] = useState<any>(null);
-  const [selectedCrossCheckItem, setSelectedCrossCheckItem] = useState<any>(null);
   const [selectedDisputeItem, setSelectedDisputeItem] = useState<any>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -78,39 +72,29 @@ export default function ArtisanDashboard() {
   const healthScore = Math.max(0, 100 - (flaggedItems.length * 15));
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] font-sans pb-12">
-      {/* Top Nav */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40 px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-16">
+      {/* HEADER - OLD DESIGN */}
+      <header className="flex justify-between items-center px-4 sm:px-8 py-4 bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-12">
           <KarigariLogo variant="dark" showWordmark={true} size={32} />
-          
-          <div className="hidden md:flex items-center gap-6">
-            <button onClick={() => setActiveTab('workshop')} className={\`text-sm font-bold pb-4 -mb-4 border-b-2 transition-colors \${activeTab === 'workshop' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500 hover:text-gray-900'}\`}>
-              My Workshop
-            </button>
-            <button onClick={() => { setActiveTab('trace'); document.getElementById('my-uploaded-works')?.scrollIntoView({behavior: 'smooth'}) }} className={\`text-sm font-bold pb-4 -mb-4 border-b-2 transition-colors \${activeTab === 'trace' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500 hover:text-gray-900'}\`}>
-              Trace Craft
-            </button>
-            <button onClick={() => window.location.href='/verify'} className={\`text-sm font-bold pb-4 -mb-4 border-b-2 transition-colors \${activeTab === 'registry' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500 hover:text-gray-900'}\`}>
-              Global Registry
-            </button>
-          </div>
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6">
           {/* Language Selector */}
           <div className="relative group cursor-pointer" onMouseEnter={() => setShowLangMenu(true)} onMouseLeave={() => setShowLangMenu(false)}>
-            <div className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors">
+            <div className="flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors py-2">
               <Globe size={16} />
               <span className="uppercase">{language}</span>
               <ChevronDown size={14} />
             </div>
             {showLangMenu && (
-              <div className="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-card border border-gray-100 z-50">
-                <button onClick={() => changeLanguage('en')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-xl font-medium">English</button>
-                <button onClick={() => changeLanguage('hi')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">हिन्दी</button>
-                <button onClick={() => changeLanguage('or')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">ଓଡ଼ିଆ</button>
-                <button onClick={() => changeLanguage('te')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-b-xl font-medium">తెలుగు</button>
+              <div className="absolute right-0 top-full w-32 pt-1 z-50">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 animate-fade-in-up overflow-hidden">
+                  <button onClick={() => { changeLanguage('en'); setShowLangMenu(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">English</button>
+                  <button onClick={() => { changeLanguage('hi'); setShowLangMenu(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">हिंदी</button>
+                  <button onClick={() => { changeLanguage('or'); setShowLangMenu(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">ଓଡିଆ</button>
+                  <button onClick={() => { changeLanguage('te'); setShowLangMenu(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">తెలుగు</button>
+                </div>
               </div>
             )}
           </div>
@@ -122,7 +106,7 @@ export default function ArtisanDashboard() {
               {flaggedItems.length > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"></span>}
             </button>
             {showNotifications && (
-              <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-card border border-gray-100 z-50">
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-100 z-50">
                 <div className="p-3 border-b border-gray-50"><h3 className="text-sm font-bold text-gray-900">Notifications</h3></div>
                 {flaggedItems.length > 0 ? (
                   <div className="max-h-60 overflow-y-auto">
@@ -138,189 +122,236 @@ export default function ArtisanDashboard() {
             )}
           </div>
           
+          <Link href="/buyer" className="hidden sm:flex items-center justify-center bg-[#0F2D20] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#1A4731] transition-colors ml-2 shadow-sm border border-[#0F2D20]/50">
+            Switch to Buyer View
+          </Link>
+
+          <div 
+            className="w-[34px] h-[34px] rounded-full overflow-hidden border border-gray-200 cursor-pointer shadow-sm hover:ring-2 hover:ring-[#1A4731] transition-all ml-2"
+            onClick={() => setIsProfileEditorOpen(true)}
+          >
+            <Image src={dashboardData?.artisanProfile?.photoUrl || "/female_artisan.jpg"} alt="Avatar" width={34} height={34} className="object-cover w-full h-full" />
+          </div>
+
           <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition-colors ml-2" title="Logout">
             <LogOut size={20} />
           </button>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
-        {/* Left Column: Profile */}
-        <aside className="lg:col-span-1 space-y-6">
-          
-          {/* Profile Card */}
-          <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 flex flex-col items-center text-center">
-            <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-gray-100 shadow-sm relative group cursor-pointer" onClick={() => setIsProfileEditorOpen(true)}>
-              <Image src={dashboardData?.artisanProfile?.photoUrl || "/female_artisan.jpg"} alt="Profile" fill className="object-cover" />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-xs font-bold">Edit</span>
-              </div>
-            </div>
-            
-            <h2 className="text-xl font-bold text-gray-900 mb-1">{dashboardData?.artisanName || 'Artisan'}</h2>
-            <div className="flex items-center gap-1 text-sm text-gray-500 mb-4 font-medium">
-              <MapPin size={14} /> {dashboardData?.artisanProfile?.clusterName || 'Pochampally Coop'}
-            </div>
-            
-            {dashboardData?.artisanProfile?.giTagCertified && (
-              <div className="bg-orange-50 text-orange-700 border border-orange-200 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 mb-6">
-                <Award size={14} /> GI Tag Certified
-              </div>
-            )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-            {/* Health Bar */}
-            <div className="w-full text-left bg-gray-50 p-4 rounded-xl border border-gray-100">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-bold text-gray-900">Artisan Trust Health</span>
-                <span className={\`text-sm font-bold \${healthScore >= 80 ? 'text-[#0D9488]' : healthScore >= 50 ? 'text-orange-500' : 'text-red-500'}\`}>
-                  {healthScore}%
+        {/* IDENTITY STRIP - COMBINED OLD STYLE W/ NEW COMPACT STRUCTURE */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 mb-6 bg-white rounded-2xl shadow-sm border border-gray-100 px-6 gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-[52px] h-[52px] rounded-full overflow-hidden border-2 border-gray-100 shadow-sm shrink-0">
+              <Image src={dashboardData?.artisanProfile?.photoUrl || "/female_artisan.jpg"} alt="Profile" width={52} height={52} className="object-cover w-full h-full" />
+            </div>
+            <div>
+              <div className="text-[16px] font-bold text-gray-900 flex items-center flex-wrap gap-2">
+                {dashboardData?.artisanName || 'Artisan'}
+                <span className="inline-flex items-center bg-green-50 text-green-700 border border-green-200 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
+                  ✓ {t('verified_badge')}
                 </span>
+                {dashboardData?.artisanProfile?.giTagCertified && (
+                  <span className="inline-flex items-center bg-orange-50 text-orange-700 border border-orange-200 text-[10.5px] font-bold px-2.5 py-0.5 rounded-full">
+                    <Award size={10} className="mr-1" /> GI Tag
+                  </span>
+                )}
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
-                <div className={\`h-1.5 rounded-full \${healthScore >= 80 ? 'bg-[#0D9488]' : healthScore >= 50 ? 'bg-orange-500' : 'bg-red-500'}\`} style={{ width: \`\${healthScore}%\` }}></div>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={\`w-2 h-2 rounded-full \${healthScore >= 80 ? 'bg-[#0D9488]' : 'bg-orange-500'}\`}></div>
-                <span className="text-xs font-medium text-gray-600">Credit Risk: <span className="font-bold">{healthScore >= 80 ? 'Low' : healthScore >= 50 ? 'Medium' : 'High'}</span></span>
+              <div className="text-[13px] text-gray-500 mt-1 font-medium flex items-center gap-1">
+                <MapPin size={12} /> {dashboardData?.artisanProfile?.clusterName || 'Local Cluster'} · {dashboardData?.artisanProfile?.craftType || 'Artisan'}
               </div>
             </div>
           </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-4 space-y-2">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3 px-2">Quick Actions</h3>
-            
-            <button onClick={() => setIsModalOpen(true)} className="w-full flex items-center justify-between p-3 bg-[#1A1A1A] hover:bg-black text-white rounded-xl transition-colors shadow-sm group">
-              <div className="flex items-center gap-3 font-bold text-sm">
-                <Camera size={18} className="text-white/70" /> Capture New Craft
-              </div>
-              <ArrowRightCircle size={18} className="opacity-50 group-hover:opacity-100 transition-opacity" />
-            </button>
-            
-            <button className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-xl transition-colors border border-gray-100 group">
-              <div className="flex items-center gap-3 font-bold text-sm">
-                <FileText size={18} className="text-gray-400" /> Apply for Schemes
-              </div>
-            </button>
-
-            <button className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 text-gray-900 rounded-xl transition-colors border border-gray-100 group">
-              <div className="flex items-center gap-3 font-bold text-sm">
-                <Globe size={18} className="text-gray-400" /> List on ONDC (B2B)
-              </div>
-            </button>
+          <div className="flex items-center gap-3 sm:min-w-[260px] bg-gray-50 py-2 px-4 rounded-xl border border-gray-100">
+            <span className="text-[12px] font-bold text-gray-500 whitespace-nowrap">{t('artisan_trust')}</span>
+            <div className="flex-1 h-[6px] bg-gray-200 rounded-full overflow-hidden">
+              <div className={`h-full ${healthScore >= 80 ? 'bg-[#0D9488]' : healthScore >= 50 ? 'bg-orange-500' : 'bg-red-500'}`} style={{ width: `${healthScore}%` }}></div>
+            </div>
+            <span className={`text-[13px] font-bold ${healthScore >= 80 ? 'text-[#0D9488]' : healthScore >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
+              {healthScore}%
+            </span>
           </div>
+        </div>
 
-        </aside>
-
-        {/* Right Column: Content */}
-        <div className="lg:col-span-3 space-y-8">
+        {/* QUICK ACTIONS */}
+        <div className="text-sm font-bold tracking-wider uppercase text-gray-500 mt-10 mb-6 px-2">
+          {t('quick_actions')}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-[1.5fr_1fr_1fr] gap-8">
           
-          <div className="mb-2">
-            <h1 className="text-2xl font-serif font-bold text-gray-900">{t('dashboard_title')}</h1>
-          </div>
-
-          {/* 4 StatCards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard 
-              label={t('my_captures')} 
-              value={dashboardData ? dashboardData.myCapturesCount.toString() : "..."} 
-              icon={<Package size={20} />} 
-              trend={dashboardData?.trends?.captures || ""} 
-              accentColor="teal" 
-            />
-            <StatCard 
-              label={t('advances_received')} 
-              value={dashboardData ? \`₹\${dashboardData.totalAdvances.toLocaleString()}\` : "..."} 
-              icon={<Banknote size={20} />} 
-              trend={dashboardData?.trends?.advances || ""} 
-              accentColor="blue" 
-            />
-            <StatCard 
-              label={t('items_sold')} 
-              value={dashboardData ? dashboardData.itemsSold.toString() : "..."} 
-              icon={<HandCoins size={20} />} 
-              trend={dashboardData?.trends?.sold || ""} 
-              accentColor="orange" 
-            />
-            <StatCard 
-              label={t('total_earnings')} 
-              value={dashboardData ? \`₹\${dashboardData.totalEarnings.toLocaleString()}\` : "..."} 
-              icon={<TrendingUp size={20} />} 
-              trend={dashboardData?.trends?.earnings || ""} 
-              accentColor="brown" 
-            />
-          </div>
-
-          {/* Craft Table */}
-          <div id="my-uploaded-works" className="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
-              <h2 className="text-lg font-serif font-bold text-gray-900">{t('my_uploaded_works')}</h2>
-              <button className="text-sm font-bold text-gray-500 hover:text-gray-900">View All</button>
+          {/* Action 1 (Primary) */}
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="rounded-3xl p-8 flex flex-col justify-between min-h-[160px] relative transition-transform hover:-translate-y-1 group overflow-hidden"
+            style={{ background: 'linear-gradient(135deg,#1A4731 0%, #0F2D20 100%)', boxShadow: '0 10px 25px -5px rgba(26,71,49,0.4)' }}
+          >
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+            <span className="absolute top-6 right-6 bg-white/20 text-white text-[12px] font-bold tracking-wider px-4 py-1.5 rounded-full uppercase">
+              {t('start_here')}
+            </span>
+            <div className="text-left relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-6">
+                <Camera size={24} className="text-white" />
+              </div>
+              <div className="text-xl font-bold text-white mb-2">{t('capture_new_craft')}</div>
+              <div className="text-base text-white/80 leading-relaxed max-w-[85%]">
+                {t('capture_subtitle')}
+              </div>
             </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-gray-50/50">
-                    <th className="px-6 py-4 font-medium">{t('craft_details')}</th>
-                    <th className="px-6 py-4 font-medium">{t('blockchain_patch_id')}</th>
-                    <th className="px-6 py-4 font-medium">{t('date')}</th>
-                    <th className="px-6 py-4 font-medium">{t('status')}</th>
-                    <th className="px-6 py-4 font-medium text-right">{t('action')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {dashboardData?.recentCaptures?.length > 0 ? (
-                    dashboardData.recentCaptures.map((item: any) => {
-                      let color = "bg-green-50 text-green-700 border-green-200";
-                      if (item.status === 'PENDING_DISBURSEMENT') color = "bg-yellow-50 text-yellow-800 border-yellow-200";
-                      if (item.status === 'ADVANCE_PAID') color = "bg-blue-50 text-blue-700 border-blue-200";
-                      if (item.status === 'SOLD_FINAL' || item.status === 'SOLD_MIDDLEMAN') color = "bg-gray-100 text-gray-700 border-gray-200";
-                      if (item.status === 'FLAGGED') color = "bg-red-50 text-red-700 border-red-200";
-
-                      return (
-                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-                                <Image src={item.images?.[0] || "/ikat_saree.jpg"} alt={item.craftType} fill className="object-cover" />
-                              </div>
-                              <span className="font-bold text-gray-900 text-sm">{item.craftType}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-mono text-gray-500">#{item.patchId || item.id.substring(0,8).toUpperCase()}</td>
-                          <td className="px-6 py-4 text-sm text-gray-600">{new Date(item.createdAt).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}</td>
-                          <td className="px-6 py-4">
-                            <span className={\`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border \${color}\`}>
-                              {item.status === 'FLAGGED' ? '⚑ Flagged' : item.status.replace(/_/g, ' ')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <button 
-                              onClick={() => { setSelectedItem(item); setIsDetailsModalOpen(true); }}
-                              className="text-xs font-bold text-gray-600 hover:text-gray-900 px-4 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors bg-white shadow-sm"
-                            >
-                              View Details
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-sm font-medium">No recent captures found. Click 'Capture New Craft' to begin!</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div className="mt-8 text-base font-bold text-white flex items-center gap-1 opacity-90 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
+              Capture now <ArrowRightCircle size={20} className="ml-1" />
             </div>
-          </div>
+          </button>
+
+          {/* Action 2 */}
+          <Link href="/artisan/schemes" className="rounded-3xl p-8 flex flex-col justify-between min-h-[160px] bg-white border border-gray-200 shadow-sm transition-all hover:-translate-y-1 hover:border-gray-300 hover:shadow-md group">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-green-50 text-[#1A4731] flex items-center justify-center mb-6">
+                <FileText size={24} />
+              </div>
+              <div className="text-xl font-bold text-gray-900 mb-2">{t('apply_for_schemes')}</div>
+              <div className="text-base text-gray-500 leading-relaxed">
+                {t('schemes_subtitle')}
+              </div>
+            </div>
+            <div className="mt-8 text-base font-bold text-[#1A4731] flex items-center group-hover:translate-x-1 transition-transform">
+              {t('view_schemes')}
+            </div>
+          </Link>
+
+          {/* Action 3 */}
+          <Link href="/artisan/insights" className="rounded-3xl p-8 flex flex-col justify-between min-h-[160px] bg-white border border-gray-200 shadow-sm transition-all hover:-translate-y-1 hover:border-gray-300 hover:shadow-md group">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-green-50 text-[#1A4731] flex items-center justify-center mb-6">
+                <Globe size={24} />
+              </div>
+              <div className="text-xl font-bold text-gray-900 mb-2">{t('market_insights') || 'Market Insights'}</div>
+              <div className="text-base text-gray-500 leading-relaxed">
+                {t('market_insights_subtitle') || 'View real-time demand maps to find the best buyers for your craft.'}
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <ArrowRightCircle size={28} className="text-[#1A4731] opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </Link>
           
         </div>
-      </main>
 
-      {/* Modals */}
+        {/* STATS */}
+        <div className="text-xs font-bold tracking-wider uppercase text-gray-400 mt-10 mb-4 px-2">
+          {t('overview')}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-center text-gray-500 text-sm font-bold">
+              {t('my_captures')} <Package size={16} className="text-gray-400"/>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mt-3">{dashboardData?.myCapturesCount || '0'}</div>
+            <div className="text-xs text-green-600 font-bold mt-2">+{dashboardData?.trends?.captures?.replace('+','') || '0'} this month</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-center text-gray-500 text-sm font-bold">
+              {t('advances_received')} <Banknote size={16} className="text-gray-400"/>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mt-3">₹{dashboardData?.totalAdvances?.toLocaleString() || '0'}</div>
+            <div className="text-xs text-green-600 font-bold mt-2">+{dashboardData?.trends?.advances?.replace('+','') || '0%'}</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-center text-gray-500 text-sm font-bold">
+              {t('items_sold')} <HandCoins size={16} className="text-gray-400"/>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mt-3">{dashboardData?.itemsSold || '0'}</div>
+            <div className="text-xs text-green-600 font-bold mt-2">+{dashboardData?.trends?.sold?.replace('+','') || '0'} this month</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-center text-gray-500 text-sm font-bold">
+              {t('total_earnings')} <TrendingUp size={16} className="text-gray-400"/>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 mt-3">₹{dashboardData?.totalEarnings?.toLocaleString() || '0'}</div>
+            <div className="text-xs text-green-600 font-bold mt-2">+{dashboardData?.trends?.earnings?.replace('+','') || '0%'}</div>
+          </div>
+        </div>
+
+        {/* LISTINGS */}
+        <div className="text-xs font-bold tracking-wider uppercase text-gray-400 mt-10 mb-4 px-2">
+          {t('my_uploaded_works')}
+        </div>
+        
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4 px-2">
+          <div>
+            <h3 className="font-bold text-xl text-gray-900">{t('table_subtitle')}</h3>
+            <p className="text-sm text-gray-500 mt-1 font-medium">{dashboardData?.myCapturesCount || '0'} total captures · {dashboardData?.itemsSold || '0'} sold</p>
+          </div>
+          <button className="border border-gray-200 bg-white px-5 py-2 rounded-xl text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
+            {t('view_all')}
+          </button>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-x-auto shadow-sm">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="text-gray-500 text-xs font-bold tracking-wider uppercase py-4 px-6 border-b border-gray-200">{t('craft_details')}</th>
+                <th className="text-gray-500 text-xs font-bold tracking-wider uppercase py-4 px-6 border-b border-gray-200">{t('blockchain_patch_id')}</th>
+                <th className="text-gray-500 text-xs font-bold tracking-wider uppercase py-4 px-6 border-b border-gray-200">{t('date')}</th>
+                <th className="text-gray-500 text-xs font-bold tracking-wider uppercase py-4 px-6 border-b border-gray-200">{t('status')}</th>
+                <th className="text-gray-500 text-xs font-bold tracking-wider uppercase py-4 px-6 border-b border-gray-200">{t('action')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dashboardData?.recentCaptures?.length > 0 ? (
+                dashboardData.recentCaptures.map((item: any, i: number) => {
+                  let statusClass = "bg-gray-100 text-gray-600"; // Minted/default
+                  if (item.status === 'PENDING_VERIFICATION') statusClass = "bg-orange-50 text-orange-600"; // Pending
+                  if (item.status === 'SOLD_FINAL' || item.status === 'SOLD_MIDDLEMAN' || item.isListedOnMarketplace) statusClass = "bg-green-50 text-green-700"; // Listed/Sold
+                  if (item.status === 'FLAGGED') statusClass = "bg-red-50 text-red-600";
+                  
+                  return (
+                    <tr key={item.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors">
+                      <td className="py-5 px-6">
+                        <div className="font-bold text-sm text-gray-900">{item.craftType}</div>
+                        <div className="text-xs text-gray-500 mt-1 truncate max-w-[200px]">{item.descriptionEnglish}</div>
+                      </td>
+                      <td className="py-5 px-6 text-xs font-medium">
+                        {item.status === 'PENDING_VERIFICATION' ? (
+                          <span className="text-gray-400 italic">Hidden pending verification</span>
+                        ) : (
+                          <span className="text-gray-500 font-mono">{item.patchId || `#ITM-${item.id.substring(0,6).toUpperCase()}`}</span>
+                        )}
+                      </td>
+                      <td className="py-5 px-6 text-sm text-gray-700 font-medium">
+                        {new Date(item.createdAt).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: 'numeric'}).replace(/\//g, ' · ')}
+                      </td>
+                      <td className="py-5 px-6">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold ${statusClass}`}>
+                          {t(item.status.toLowerCase()) !== item.status.toLowerCase() ? t(item.status.toLowerCase()) : item.status.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td className="py-5 px-6">
+                        <button 
+                          onClick={() => { setSelectedItem(item); setIsDetailsModalOpen(true); }}
+                          className="text-[#1A4731] font-bold text-sm hover:underline"
+                        >
+                          {t('view_details')}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} className="py-12 px-6 text-center text-gray-500 text-sm font-medium">{t('table_no_data')}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      {/* MODALS */}
       <CaptureModal isOpen={isModalOpen} onClose={handleModalClose} />
       <AgentHandoffModal 
         isOpen={isSellModalOpen || isCrossCheckModalOpen} 
@@ -356,7 +387,7 @@ function DetailsModal({ item, onClose }: { item: any, onClose: () => void }) {
           <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-6 bg-gray-100 border border-gray-200 shadow-sm">
             <Image src={item.images?.[0] || "/ikat_saree.jpg"} alt="Item" fill className="object-cover" />
             <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-              ID: {item.patchId || item.id.substring(0,8).toUpperCase()}
+              {item.status === 'PENDING_VERIFICATION' ? 'ID Hidden' : `ID: ${item.patchId || item.id.substring(0,8).toUpperCase()}`}
             </div>
           </div>
           

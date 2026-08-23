@@ -18,6 +18,9 @@ export default function RegisterPage() {
     craftType: "Ikat",
     location: "",
     experienceYears: "",
+    aadhaarLast4: "",
+    annualIncome: "",
+    clusterName: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -196,6 +199,51 @@ export default function RegisterPage() {
                       placeholder="5"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Aadhaar (Last 4)</label>
+                    <input
+                      name="aadhaarLast4"
+                      type="text"
+                      required
+                      maxLength={4}
+                      pattern="[0-9]{4}"
+                      value={formData.aadhaarLast4}
+                      onChange={handleChange}
+                      className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
+                      placeholder="1234"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Annual Income (₹)</label>
+                    <input
+                      name="annualIncome"
+                      type="number"
+                      required
+                      min="0"
+                      value={formData.annualIncome}
+                      onChange={handleChange}
+                      className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
+                      placeholder="85000"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <User size={14} /> Link to SHG Group (Optional)
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">Joining an SHG allows community support while retaining individual decision power via SMS.</p>
+                  <input
+                    name="clusterName"
+                    type="text"
+                    value={formData.clusterName}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all"
+                    placeholder="e.g. Pochampally Weavers"
+                  />
                 </div>
               </div>
             )}

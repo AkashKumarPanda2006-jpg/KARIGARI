@@ -17,6 +17,8 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
   const { language } = useLanguage();
   const [photoUrl, setPhotoUrl] = useState(artisanData?.photoUrl || "/female_artisan.jpg");
   const [name, setName] = useState(artisanData?.name || "");
+  const [mobileNumber, setMobileNumber] = useState(artisanData?.mobileNumber || "");
+  const [aadhaarLast4, setAadhaarLast4] = useState(artisanData?.aadhaarLast4 || "");
   const [upiId, setUpiId] = useState(artisanData?.upiId || "");
   const [description, setDescription] = useState(artisanData?.description || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -28,6 +30,8 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
     if (artisanData) {
       setPhotoUrl(artisanData.photoUrl || "/female_artisan.jpg");
       setName(artisanData.name || "");
+      setMobileNumber(artisanData.mobileNumber || "");
+      setAadhaarLast4(artisanData.aadhaarLast4 || "");
       setUpiId(artisanData.upiId || "");
       setDescription(artisanData.description || "");
     }
@@ -91,6 +95,11 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
 
     recognition.onerror = (event: any) => {
       console.error("Speech error:", event.error);
+      if (event.error === 'network') {
+        alert("Network error: Speech recognition failed to connect. Please check your internet connection.");
+      } else if (event.error !== 'no-speech') {
+        alert(`Speech recognition error: ${event.error}`);
+      }
       setListeningField(null);
     };
 
@@ -110,7 +119,7 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
       const res = await fetch("/api/artisan/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, photoUrl, upiId, description })
+        body: JSON.stringify({ name, photoUrl, upiId, description, mobileNumber, aadhaarLast4 })
       });
       if (res.ok) {
         onSaved();
@@ -174,6 +183,37 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
               placeholder="Your Name"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Mobile Number (SMS/WhatsApp Alerts)</label>
+            <input 
+              type="tel" 
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
+              placeholder="+91 9876543210"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Aadhaar Last 4 Digits (For Verification)</label>
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                maxLength={4}
+                value={aadhaarLast4}
+                onChange={(e) => setAadhaarLast4(e.target.value.replace(/\D/g, ''))}
+                placeholder="e.g. 1234"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+              />
+              <button 
+                className="shrink-0 bg-blue-50 text-blue-700 px-4 rounded-xl font-bold border border-blue-200 hover:bg-blue-100 transition-colors"
+                onClick={() => alert("In a production environment, this would securely verify against UIDAI.")}
+              >
+                Verify
+              </button>
+            </div>
           </div>
 
           <div>

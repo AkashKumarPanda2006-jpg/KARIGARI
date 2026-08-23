@@ -7,11 +7,14 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, password, role, craftType, location, experienceYears } = body;
+    const { name, email, password, role, craftType, location, experienceYears, aadhaarLast4, annualIncome, clusterName } = body;
 
     // Validation
     if (!name || !email || !password || !role) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    if (role === 'ARTISAN' && (!aadhaarLast4 || !annualIncome)) {
+      return NextResponse.json({ error: 'Aadhaar Last 4 and Annual Income are required for artisans' }, { status: 400 });
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -33,6 +36,9 @@ export async function POST(req: Request) {
               craftType: craftType || 'Unspecified',
               location: location || 'Unspecified',
               experienceYears: Number(experienceYears) || 0,
+              aadhaarLast4: aadhaarLast4,
+              annualIncome: Number(annualIncome) || 0,
+              clusterName: clusterName || 'Independent',
             }
           }
         })

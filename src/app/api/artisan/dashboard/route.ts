@@ -42,7 +42,10 @@ export async function GET(req: Request) {
       pastWeekSold,
       pastWeekQueued
     ] = await Promise.all([
-      prisma.user.findUnique({ where: { id: artisanId }, include: { artisanProfile: true } }),
+      prisma.user.findUnique({ 
+        where: { id: artisanId }, 
+        include: { artisanProfile: true, schemeApplications: true } 
+      }),
       prisma.craftItem.count({ where: { artisanId } }),
       prisma.craftItem.findMany({ where: { artisanId, status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } }, select: { advancePaid: true, fairWageFloor: true } }),
       prisma.craftItem.count({ where: { artisanId, status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } } }),
@@ -65,6 +68,7 @@ export async function GET(req: Request) {
       data: {
         artisanName: user?.name,
         artisanProfile: user?.artisanProfile,
+        schemeApplications: user?.schemeApplications,
         myCapturesCount,
         totalAdvances,
         itemsSold,

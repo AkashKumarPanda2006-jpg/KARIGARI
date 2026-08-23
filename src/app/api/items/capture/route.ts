@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { craftType, rawMaterialCost, laborDays, descriptionOriginal, descriptionEnglish, tags, assignedAdminId, images } = body;
+    const { craftType, rawMaterialCost, laborDays, descriptionOriginal, descriptionEnglish, tags, assignedAdminId, images, aiGeneratedListing } = body;
     
     console.log(`[Capture API] Received payload with ${images ? images.length : 'NO'} images.`);
     if (images && images.length > 0) {
@@ -110,6 +110,7 @@ export async function POST(req: Request) {
         craftType,
         descriptionOriginal,
         descriptionEnglish,
+        aiGeneratedListing,
         tags: tags || [],
         images: images || [],
         rawMaterialCost: rawCost,

@@ -87,8 +87,6 @@ export const dictionary: Record<Language, Record<string, string>> = {
     table_subtitle: "Manage & track your recent craft captures",
     table_no_data: "No captures yet. Start by capturing a new craft.",
     verified_badge: "Verified",
-    market_insights: "Market Insights",
-    market_insights_subtitle: "View real-time demand maps to find the best buyers for your craft."
   },
   hi: {
     transaction_details: "लेनदेन विवरण",
@@ -172,8 +170,6 @@ export const dictionary: Record<Language, Record<string, string>> = {
     table_subtitle: "अपने हालिया शिल्पों का प्रबंधन और ट्रैक करें",
     table_no_data: "अभी तक कोई कैप्चर नहीं। नया शिल्प कैप्चर करके शुरुआत करें।",
     verified_badge: "सत्यापित",
-    market_insights: "बाजार अंतर्दृष्टि",
-    market_insights_subtitle: "मांग मानचित्र देखें"
   },
   or: {
     transaction_details: "କାରବାର ବିବରଣୀ",
@@ -257,8 +253,6 @@ export const dictionary: Record<Language, Record<string, string>> = {
     table_subtitle: "ଆପଣଙ୍କର ସାମ୍ପ୍ରତିକ ଶିଳ୍ପଗୁଡ଼ିକ ପରିଚାଳନା ଏବଂ ଟ୍ରାକ୍ କରନ୍ତୁ",
     table_no_data: "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଶିଳ୍ପ ନାହିଁ। ନୂତନ ଶିଳ୍ପ କ୍ୟାପଚର କରି ଆରମ୍ଭ କରନ୍ତୁ।",
     verified_badge: "ଯାଞ୍ଚ ହୋଇଛି",
-    market_insights: "ବଜାର ଅନ୍ତର୍ଦୃଷ୍ଟି",
-    market_insights_subtitle: "ଚାହିଦା ମାନଚିତ୍ର ଦେଖନ୍ତୁ"
   },
   te: {
     transaction_details: "లావాదేవీ వివరాలు",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Mic, UploadCloud, FileText, QrCode, ArrowRight, X, Sparkles, CheckCircle2, Camera, Trash2, ShieldCheck, Wallet } from "lucide-react";
+import { Mic, UploadCloud, FileText, QrCode, ArrowRight, X, Sparkles, CheckCircle2, Camera, Trash2, ShieldCheck, Wallet, Globe } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -62,6 +62,9 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
   // New ML and Admin features
   const [isVerifyingVision, setIsVerifyingVision] = useState(false);
   const [isVisionVerified, setIsVisionVerified] = useState(false);
+  const [isEnhancingImage, setIsEnhancingImage] = useState(false);
+  const [ecommerceDescEnglish, setEcommerceDescEnglish] = useState("");
+  const [ecommerceDescLocal, setEcommerceDescLocal] = useState("");
   const [admins, setAdmins] = useState<any[]>([]);
   const [assignedAdminId, setAssignedAdminId] = useState<string>("");
 
@@ -94,20 +97,32 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
       });
   }, []);
 
-  // AI Vision Verification
+  // AI Vision Verification & Enhancement
   useEffect(() => {
     if (images.length > 0 && !isVisionVerified && !isVerifyingVision && step === 2) {
       setIsVerifyingVision(true);
+      setIsEnhancingImage(true);
+
+      // Simulate image enhancement delay visually
+      setTimeout(() => setIsEnhancingImage(false), 2000);
+
       fetch('/api/items/vision-verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: images[0], description: englishDescription })
+        body: JSON.stringify({ 
+          imageBase64: images[0], 
+          description: englishDescription,
+          targetLanguage: language
+        })
       })
       .then(res => res.json())
       .then(data => {
         setIsVerifyingVision(false);
+        setIsEnhancingImage(false);
         if (data.success && data.data.isVerified) {
           setIsVisionVerified(true);
+          setEcommerceDescEnglish(data.data.ecommerceDescriptionEnglish || "");
+          setEcommerceDescLocal(data.data.ecommerceDescriptionLocal || "");
         } else {
           alert("AI Vision Rejected: " + (data.data?.reasoning || 'Image does not match description.'));
           setImages([]);
@@ -116,11 +131,12 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
       .catch(err => {
         console.error(err);
         setIsVerifyingVision(false);
+        setIsEnhancingImage(false);
         alert("Vision verification failed. Please try again.");
         setImages([]);
       });
     }
-  }, [images, isVisionVerified, isVerifyingVision, step, englishDescription]);
+  }, [images, isVisionVerified, isVerifyingVision, step, englishDescription, language]);
 
   // Auto create draft on Step 3 completion (Wait for save button)
   const handleSaveUpload = async () => {
@@ -137,7 +153,8 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
           descriptionOriginal: originalTranscript || "Craft item description",
           descriptionEnglish: englishDescription || "English description of craft",
           tags: [craftType || "ArtisanCraft"],
-          images: images
+          images: images,
+          aiGeneratedListing: ecommerceDescEnglish
         })
       });
       
@@ -499,7 +516,12 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
               <h3 className="text-2xl font-bold mb-2">{t('craft_photos')}</h3>
               <p className="text-gray-500 mb-6">Capture the craft using your live camera or upload existing photos.</p>
               
-              {isVerifyingVision && (
+              {isEnhancingImage ? (
+                <div className="bg-purple-50 border border-purple-200 text-purple-800 px-4 py-3 rounded-xl mb-6 text-sm flex gap-3 items-center shadow-sm animate-pulse">
+                  <Sparkles size={20} className="text-purple-600" />
+                  <p className="font-bold">Enhancing your picture & generating description...</p>
+                </div>
+              ) : isVerifyingVision && (
                 <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-xl mb-6 text-sm flex gap-3 items-center shadow-sm">
                   <div className="w-5 h-5 border-2 border-yellow-400 border-t-yellow-800 rounded-full animate-spin"></div>
                   <p className="font-bold">Vision-Sentinel Agent is verifying authenticity...</p>
@@ -507,9 +529,31 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
               )}
 
               {isVisionVerified && images.length > 0 && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl mb-6 text-sm flex gap-3 items-center shadow-sm animate-fade-in-up">
-                  <ShieldCheck size={20} className="text-green-600" />
-                  <p><strong>AI Verified:</strong> Matches description.</p>
+                <div className="mb-6 space-y-4">
+                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl text-sm flex gap-3 items-center shadow-sm animate-fade-in-up">
+                    <ShieldCheck size={20} className="text-green-600 shrink-0" />
+                    <p><strong>AI Verified & Enhanced:</strong> Ready for e-commerce listing.</p>
+                  </div>
+                  
+                  {ecommerceDescEnglish && (
+                    <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm animate-fade-in-up">
+                      <div className="flex items-center gap-2 mb-2">
+                         <Globe size={16} className="text-blue-500"/>
+                         <h4 className="font-bold text-sm text-gray-800">E-Commerce Description (English)</h4>
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed">{ecommerceDescEnglish}</p>
+                    </div>
+                  )}
+
+                  {ecommerceDescLocal && ecommerceDescLocal !== ecommerceDescEnglish && language !== 'en' && (
+                    <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm animate-fade-in-up">
+                      <div className="flex items-center gap-2 mb-2">
+                         <Globe size={16} className="text-green-600"/>
+                         <h4 className="font-bold text-sm text-gray-800">E-Commerce Description ({language.toUpperCase()})</h4>
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed">{ecommerceDescLocal}</p>
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -550,7 +594,7 @@ export function CaptureModal({ isOpen, onClose }: CaptureModalProps) {
                   <div className="grid grid-cols-3 gap-3">
                     {images.map((img, idx) => (
                       <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
-                        <Image src={img} alt={`Capture ${idx}`} fill className="object-cover" />
+                        <Image src={img} alt={`Capture ${idx}`} fill className={cn("object-cover transition-all duration-1000", isVisionVerified ? "brightness-110 contrast-105 saturate-110" : "")} />
                         <button 
                           onClick={() => removeImage(idx)}
                           className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"

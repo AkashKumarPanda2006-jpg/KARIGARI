@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {
@@ -8,6 +8,7 @@ interface StatCardProps {
   accentColor?: 'teal' | 'orange' | 'blue' | 'brown';
   trend?: string;
   className?: string;
+  variant?: 'default' | 'admin';
 }
 
 export function StatCard({ 
@@ -16,9 +17,42 @@ export function StatCard({
   icon, 
   accentColor = 'teal', 
   trend,
-  className 
+  className,
+  variant = 'default'
 }: StatCardProps) {
   
+  if (variant === 'admin') {
+    return (
+      <div className={cn(
+        "bg-white rounded-2xl shadow-sm p-6 flex flex-col justify-between h-full min-h-[140px] border border-gray-100",
+        className
+      )}>
+        <div className="flex items-center gap-2 mb-4">
+          {icon && (
+            <div className="text-gray-500">
+              {icon}
+            </div>
+          )}
+          <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+            {label}
+          </h3>
+        </div>
+        
+        <div className="flex items-end justify-between mt-auto">
+          <div className="text-5xl font-serif font-bold text-gray-900 tracking-tight">
+            {value}
+          </div>
+          {trend && (
+            <div className="text-sm font-medium text-gray-500">
+              {trend}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Default variant (Artisan Dashboard)
   const borderColors = {
     teal: 'border-l-[var(--color-stat-teal)]',
     orange: 'border-l-[var(--color-stat-orange)]',
