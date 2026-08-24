@@ -24,8 +24,8 @@ export default function MarketPage() {
 
       <main className="max-w-4xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-[#1A4731] flex items-center gap-3">
-            <Globe size={28} className="text-[#1A4731]" />
+          <h1 className="text-3xl font-serif font-bold text-[#24332C] flex items-center gap-3">
+            <Globe size={28} className="text-[#24332C]" />
             {language === 'hi' ? 'बाज़ार और B2B लिस्टिंग' : 'Global Market & B2B Listing'}
           </h1>
           <p className="text-gray-600 mt-2 text-lg">
@@ -37,13 +37,13 @@ export default function MarketPage() {
         <div className="flex gap-4 mb-6">
           <button 
             onClick={() => setActiveTab("ondc")}
-            className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'ondc' ? 'bg-[#1A4731] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
+            className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'ondc' ? 'bg-[#24332C] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
           >
             <Store size={20} /> ONDC Network
           </button>
           <button 
             onClick={() => setActiveTab("b2b")}
-            className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'b2b' ? 'bg-[#1A4731] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
+            className={`flex-1 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'b2b' ? 'bg-[#24332C] text-white' : 'bg-white text-gray-600 border border-gray-200'}`}
           >
             <Package size={20} /> Bulk Buyers (B2B)
           </button>
@@ -103,7 +103,7 @@ export default function MarketPage() {
                   <div className="font-bold text-gray-900">Ready to start selling?</div>
                   <div className="text-sm text-gray-500">Your profile meets all ONDC requirements.</div>
                 </div>
-                <button className="bg-[#1A4731] hover:bg-[#123323] text-white font-bold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2">
+                <button className="bg-[#24332C] hover:bg-[#1A2721] text-white font-bold py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2">
                   Link Account <ChevronRight size={16} />
                 </button>
               </div>
@@ -131,7 +131,7 @@ export default function MarketPage() {
               <h3 className="font-bold text-gray-900 mb-4 text-lg">Active Bulk Enquiries</h3>
               
               <div className="space-y-4">
-                <div className="border border-gray-200 rounded-xl p-4 hover:border-[#1A4731] transition-colors">
+                <div className="border border-gray-200 rounded-xl p-4 hover:border-[#24332C] transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-bold text-lg text-gray-900">FabIndia Procurement</h4>
                     <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">MATCH</span>
@@ -140,11 +140,11 @@ export default function MarketPage() {
                   <div className="flex items-center gap-4 text-sm font-medium">
                     <span className="text-gray-900">Value: ₹1,50,000</span>
                     <span className="text-gray-400">|</span>
-                    <button className="text-[#1A4731] hover:underline">Submit Quote</button>
+                    <button className="text-[#24332C] hover:underline">Submit Quote</button>
                   </div>
                 </div>
 
-                <div className="border border-gray-200 rounded-xl p-4 hover:border-[#1A4731] transition-colors">
+                <div className="border border-gray-200 rounded-xl p-4 hover:border-[#24332C] transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-bold text-lg text-gray-900">Corporate Gifting (TCS)</h4>
                     <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">NEW</span>
@@ -153,7 +153,7 @@ export default function MarketPage() {
                   <div className="flex items-center gap-4 text-sm font-medium">
                     <span className="text-gray-900">Value: ₹80,000</span>
                     <span className="text-gray-400">|</span>
-                    <button className="text-[#1A4731] hover:underline">Submit Portfolio</button>
+                    <button className="text-[#24332C] hover:underline">Submit Portfolio</button>
                   </div>
                 </div>
               </div>

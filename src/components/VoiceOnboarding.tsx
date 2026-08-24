@@ -152,7 +152,7 @@ export function VoiceOnboarding({ artisanName, currentRoute }: { artisanName?: s
 
       {isOpen && (
         <div className="fixed bottom-24 right-6 w-80 bg-white rounded-3xl shadow-2xl border border-gray-100 z-[100] overflow-hidden flex flex-col animate-fade-in-up">
-          <div className="bg-[#0F2D20] p-4 text-white flex justify-between items-center">
+          <div className="bg-[#14211B] p-4 text-white flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
                 <Mic size={16} className="text-green-300" />
@@ -180,7 +180,7 @@ export function VoiceOnboarding({ artisanName, currentRoute }: { artisanName?: s
                )}
 
                {responseMsg && (
-                 <div className="bg-[#E6F4EA] p-3 rounded-2xl rounded-tl-none text-sm text-[#0F2D20] self-start shadow-sm w-11/12">
+                 <div className="bg-[#DCEBE0] p-3 rounded-2xl rounded-tl-none text-sm text-[#14211B] self-start shadow-sm w-11/12">
                    {responseMsg}
                  </div>
                )}
@@ -198,7 +198,7 @@ export function VoiceOnboarding({ artisanName, currentRoute }: { artisanName?: s
             ) : (
               <button 
                 onClick={startListening}
-                className="w-14 h-14 bg-[#1A4731] hover:bg-[#0F2D20] rounded-full flex items-center justify-center text-white shadow-md transition-colors"
+                className="w-14 h-14 bg-[#24332C] hover:bg-[#14211B] rounded-full flex items-center justify-center text-white shadow-md transition-colors"
               >
                 <Mic size={24} />
               </button>

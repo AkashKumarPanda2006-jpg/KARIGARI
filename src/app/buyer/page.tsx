@@ -26,7 +26,7 @@ export default function BuyerDashboard() {
         <div className="flex items-center gap-4">
           <KarigariLogo variant="dark" showWordmark={true} size={28} />
           <span className="text-gray-300 font-light text-xl">|</span>
-          <span className="font-bold text-[#1A4731] tracking-wide">B2B MARKETPLACE</span>
+          <span className="font-bold text-[#24332C] tracking-wide">B2B MARKETPLACE</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -45,7 +45,7 @@ export default function BuyerDashboard() {
         
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-serif font-bold text-gray-900">My Demand Requests</h1>
-          <button className="bg-[#0F2D20] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-[#1A4731] transition-colors flex items-center gap-2">
+          <button className="bg-[#14211B] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-[#24332C] transition-colors flex items-center gap-2">
             <Package size={16} /> Post New Demand
           </button>
         </div>
@@ -102,11 +102,11 @@ export default function BuyerDashboard() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-bold text-gray-500">Quoted Price</div>
-                          <div className="text-2xl font-black text-[#1A4731]">₹3,850 <span className="text-sm font-normal text-gray-500">/ unit</span></div>
+                          <div className="text-2xl font-black text-[#24332C]">₹3,850 <span className="text-sm font-normal text-gray-500">/ unit</span></div>
                         </div>
                       </div>
 
-                      <div className="bg-[#F5F8F7] rounded-lg p-4 mb-4 border border-[#E7F2EA]">
+                      <div className="bg-[#DCEBE0] rounded-lg p-4 mb-4 border border-[#DCEBE0]">
                         <h4 className="text-xs font-bold text-green-800 uppercase tracking-wider mb-2 flex items-center gap-2">
                           <TrendingUp size={14} /> AI Profitability Prediction
                         </h4>
@@ -124,7 +124,7 @@ export default function BuyerDashboard() {
                           </div>
                         ) : (
                         <div className="flex gap-3">
-                          <button onClick={handleAcceptQuote} className="flex-1 bg-[#1A4731] text-white py-3 rounded-xl font-bold hover:bg-[#0F2D20] transition-colors shadow-sm">
+                          <button onClick={handleAcceptQuote} className="flex-1 bg-[#24332C] text-white py-3 rounded-xl font-bold hover:bg-[#14211B] transition-colors shadow-sm">
                             Accept Quote & Purchase
                           </button>
                           <button className="flex-1 bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm">
@@ -146,7 +146,7 @@ export default function BuyerDashboard() {
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Shipping Estimates (Mumbai)</h3>
               
               <div className="space-y-4">
-                <div className="border border-gray-100 rounded-xl p-4 cursor-pointer hover:border-[#1A4731] transition-colors">
+                <div className="border border-gray-100 rounded-xl p-4 cursor-pointer hover:border-[#24332C] transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
                       <Truck size={16} className="text-gray-500" /> Standard Air
@@ -156,15 +156,15 @@ export default function BuyerDashboard() {
                   <div className="text-xs text-gray-500">Delivery in 2-3 Days. High carbon footprint.</div>
                 </div>
 
-                <div className="border-2 border-[#1A4731] bg-[#F5F8F7] rounded-xl p-4 cursor-pointer relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-[#1A4731] text-white text-[9px] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">
+                <div className="border-2 border-[#24332C] bg-[#DCEBE0] rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-[#24332C] text-white text-[9px] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">
                     Recommended
                   </div>
                   <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2 font-bold text-[#1A4731] text-sm">
+                    <div className="flex items-center gap-2 font-bold text-[#24332C] text-sm">
                       <Leaf size={16} /> Eco-Friendly Surface
                     </div>
-                    <div className="font-bold text-[#1A4731]">₹200</div>
+                    <div className="font-bold text-[#24332C]">₹200</div>
                   </div>
                   <div className="text-xs text-gray-600 mb-2">Delivery in 5-7 Days via train/truck routing.</div>
                   <div className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded text-[10px] font-bold">
@@ -174,7 +174,7 @@ export default function BuyerDashboard() {
               </div>
             </div>
 
-            <div className="bg-[#0F2D20] text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
+            <div className="bg-[#14211B] text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
               <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2 relative z-10">B2B Market Insights</h3>
               <p className="text-sm text-white/80 mb-4 relative z-10">Diwali demand for Silk is surging. Securing inventory now avoids a 15% price hike expected next week.</p>

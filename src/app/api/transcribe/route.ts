@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     } else if (currentRoute?.includes("insights")) {
       response = "I have filtered the demand map based on your query.";
     } else if (currentRoute?.includes("schemes")) {
-      response = "I will help you apply for this scheme using your verified Aadhaar profile.";
+      response = "I can show which government schemes you qualify for, and why. You apply yourself on the official government portal - KARIGARI never submits anything for you.";
     } else {
        if (language === 'hi') response = "मैंने आपकी सूची के लिए वे विवरण नोट कर लिए हैं।";
        if (language === 'or') response = "ମୁଁ ଆପଣଙ୍କ ତାଲିକା ପାଇଁ ସେହି ବିବରଣୀଗୁଡିକ ନୋଟ୍ କରିଛି।";

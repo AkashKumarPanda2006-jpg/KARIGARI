@@ -50,7 +50,7 @@ export default function RegisterPage() {
 
       // Success! The httpOnly cookie is set. Redirect to dashboard.
       if (role === 'ADMIN') {
-        router.push("/admin/dashboard");
+        router.push("/admin/facilitator");
       } else {
         router.push("/artisan/dashboard");
       }

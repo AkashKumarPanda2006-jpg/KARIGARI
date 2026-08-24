@@ -88,12 +88,22 @@ model CraftItem {
   giTagApplied         String?
   isListedOnMarketplace Boolean @default(false)
 
+  // Anti-exploitation pricing guardian (new_admin.md Tier 1.1)
+  pricingFlag         Boolean  @default(false)
+  flagReason          String?
+
+  // Digital-inclusion telemetry (new_admin.md Tier 2.1)
+  catalogMethod       String?  // "VOICE" | "MANUAL"
+  voiceLanguage       String?  // "Odia" | "Hindi" | "Telugu" | "English"
+  audioUrl            String?  // optional; null for legacy rows
+
   auditLogs           AuditLog[]
 
   @@index([artisanId])
   @@index([patchId])
   @@index([status])
   @@index([createdAt])
+  @@index([pricingFlag])
 }
 
 model AuditLog {
@@ -113,12 +123,15 @@ model SchemeApplication {
   id         String    @id @default(uuid())
   userId     String
   user       User      @relation(fields: [userId], references: [id])
+  /// Stable key from src/lib/schemes.ts (SchemeKey). Replaces fuzzy name matching.
+  schemeKey  String?
   schemeName String
   status     String    @default("ELIGIBLE")
   appliedAt  DateTime?
   notes      String?
   createdAt  DateTime  @default(now())
-  
+
   @@index([userId])
+  @@index([userId, schemeKey])
 }
 

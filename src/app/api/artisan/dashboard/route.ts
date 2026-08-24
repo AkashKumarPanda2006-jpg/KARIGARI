@@ -57,6 +57,13 @@ export async function GET(req: Request) {
       prisma.craftItem.aggregate({ _sum: { finalPayoutQueued: true }, where: { artisanId, status: 'SOLD_FINAL', createdAt: { gte: oneWeekAgo } } })
     ]);
 
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Your session is no longer valid. Please sign in again.', code: 'SESSION_STALE' },
+        { status: 401 }
+      );
+    }
+
     const totalAdvances = advancedItems.reduce((sum: number, item: any) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
     const totalEarnings = totalAdvances + (queued._sum.finalPayoutQueued || 0);
 

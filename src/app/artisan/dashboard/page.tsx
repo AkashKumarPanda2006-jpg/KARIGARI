@@ -122,12 +122,12 @@ export default function ArtisanDashboard() {
             )}
           </div>
           
-          <Link href="/buyer" className="hidden sm:flex items-center justify-center bg-[#0F2D20] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#1A4731] transition-colors ml-2 shadow-sm border border-[#0F2D20]/50">
+          <Link href="/buyer" className="hidden sm:flex items-center justify-center bg-[#14211B] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#24332C] transition-colors ml-2 shadow-sm border border-[#14211B]/50">
             Switch to Buyer View
           </Link>
 
           <div 
-            className="w-[34px] h-[34px] rounded-full overflow-hidden border border-gray-200 cursor-pointer shadow-sm hover:ring-2 hover:ring-[#1A4731] transition-all ml-2"
+            className="w-[34px] h-[34px] rounded-full overflow-hidden border border-gray-200 cursor-pointer shadow-sm hover:ring-2 hover:ring-[#24332C] transition-all ml-2"
             onClick={() => setIsProfileEditorOpen(true)}
           >
             <Image src={dashboardData?.artisanProfile?.photoUrl || "/female_artisan.jpg"} alt="Avatar" width={34} height={34} className="object-cover w-full h-full" />
@@ -167,9 +167,9 @@ export default function ArtisanDashboard() {
           <div className="flex items-center gap-3 sm:min-w-[260px] bg-gray-50 py-2 px-4 rounded-xl border border-gray-100">
             <span className="text-[12px] font-bold text-gray-500 whitespace-nowrap">{t('artisan_trust')}</span>
             <div className="flex-1 h-[6px] bg-gray-200 rounded-full overflow-hidden">
-              <div className={`h-full ${healthScore >= 80 ? 'bg-[#0D9488]' : healthScore >= 50 ? 'bg-orange-500' : 'bg-red-500'}`} style={{ width: `${healthScore}%` }}></div>
+              <div className={`h-full ${healthScore >= 80 ? 'bg-[#3D624F]' : healthScore >= 50 ? 'bg-orange-500' : 'bg-red-500'}`} style={{ width: `${healthScore}%` }}></div>
             </div>
-            <span className={`text-[13px] font-bold ${healthScore >= 80 ? 'text-[#0D9488]' : healthScore >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
+            <span className={`text-[13px] font-bold ${healthScore >= 80 ? 'text-[#3D624F]' : healthScore >= 50 ? 'text-orange-500' : 'text-red-500'}`}>
               {healthScore}%
             </span>
           </div>
@@ -185,7 +185,7 @@ export default function ArtisanDashboard() {
           <button 
             onClick={() => setIsModalOpen(true)}
             className="rounded-3xl p-8 flex flex-col justify-between min-h-[160px] relative transition-transform hover:-translate-y-1 group overflow-hidden"
-            style={{ background: 'linear-gradient(135deg,#1A4731 0%, #0F2D20 100%)', boxShadow: '0 10px 25px -5px rgba(26,71,49,0.4)' }}
+            style={{ background: 'linear-gradient(135deg,#24332C 0%, #14211B 100%)', boxShadow: '0 10px 25px -5px rgba(26,71,49,0.4)' }}
           >
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
             <span className="absolute top-6 right-6 bg-white/20 text-white text-[12px] font-bold tracking-wider px-4 py-1.5 rounded-full uppercase">
@@ -208,7 +208,7 @@ export default function ArtisanDashboard() {
           {/* Action 2 */}
           <Link href="/artisan/schemes" className="rounded-3xl p-8 flex flex-col justify-between min-h-[160px] bg-white border border-gray-200 shadow-sm transition-all hover:-translate-y-1 hover:border-gray-300 hover:shadow-md group">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-green-50 text-[#1A4731] flex items-center justify-center mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-green-50 text-[#24332C] flex items-center justify-center mb-6">
                 <FileText size={24} />
               </div>
               <div className="text-xl font-bold text-gray-900 mb-2">{t('apply_for_schemes')}</div>
@@ -216,7 +216,7 @@ export default function ArtisanDashboard() {
                 {t('schemes_subtitle')}
               </div>
             </div>
-            <div className="mt-8 text-base font-bold text-[#1A4731] flex items-center group-hover:translate-x-1 transition-transform">
+            <div className="mt-8 text-base font-bold text-[#24332C] flex items-center group-hover:translate-x-1 transition-transform">
               {t('view_schemes')}
             </div>
           </Link>
@@ -224,7 +224,7 @@ export default function ArtisanDashboard() {
           {/* Action 3 */}
           <Link href="/artisan/insights" className="rounded-3xl p-8 flex flex-col justify-between min-h-[160px] bg-white border border-gray-200 shadow-sm transition-all hover:-translate-y-1 hover:border-gray-300 hover:shadow-md group">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-green-50 text-[#1A4731] flex items-center justify-center mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-green-50 text-[#24332C] flex items-center justify-center mb-6">
                 <Globe size={24} />
               </div>
               <div className="text-xl font-bold text-gray-900 mb-2">{t('market_insights') || 'Market Insights'}</div>
@@ -233,7 +233,7 @@ export default function ArtisanDashboard() {
               </div>
             </div>
             <div className="flex justify-end mt-4">
-              <ArrowRightCircle size={28} className="text-[#1A4731] opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowRightCircle size={28} className="text-[#24332C] opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           </Link>
           
@@ -332,7 +332,7 @@ export default function ArtisanDashboard() {
                       <td className="py-5 px-6">
                         <button 
                           onClick={() => { setSelectedItem(item); setIsDetailsModalOpen(true); }}
-                          className="text-[#1A4731] font-bold text-sm hover:underline"
+                          className="text-[#24332C] font-bold text-sm hover:underline"
                         >
                           {t('view_details')}
                         </button>
@@ -378,7 +378,7 @@ function DetailsModal({ item, onClose }: { item: any, onClose: () => void }) {
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up">
       <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <h2 className="font-serif font-bold text-lg text-[#1A4731]">{t('transaction_details')}</h2>
+          <h2 className="font-serif font-bold text-lg text-[#24332C]">{t('transaction_details')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500">
             <X size={20} />
           </button>

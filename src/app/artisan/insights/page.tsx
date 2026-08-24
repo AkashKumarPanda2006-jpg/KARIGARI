@@ -57,7 +57,7 @@ export default function InsightsPage() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">Live Demand Map</h2>
-              <p className="text-gray-500 text-sm">Viewing AI-aggregated B2B matching signals for <strong className="text-[#1A4731]">{craft}</strong>.</p>
+              <p className="text-gray-500 text-sm">Viewing AI-aggregated B2B matching signals for <strong className="text-[#24332C]">{craft}</strong>.</p>
             </div>
             {newDemandAppeared && (
               <div className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1.5 rounded-full animate-bounce">
@@ -67,7 +67,7 @@ export default function InsightsPage() {
           </div>
           
           {/* Map Container */}
-          <div className="relative w-full aspect-video bg-[#E8EAED] rounded-xl border border-gray-200 overflow-hidden shadow-inner">
+          <div className="relative w-full aspect-video bg-[#ECE6E2] rounded-xl border border-gray-200 overflow-hidden shadow-inner">
             {/* Realistic Map Background (OpenStreetMap) */}
             <div className="absolute inset-0 z-0">
               <iframe 
@@ -84,7 +84,7 @@ export default function InsightsPage() {
             </div>
             
             {/* Overlay shadow for depth */}
-            <div className="absolute inset-0 z-0 shadow-inner bg-gradient-to-b from-transparent to-[#E8EAED]/50 pointer-events-none"></div>
+            <div className="absolute inset-0 z-0 shadow-inner bg-gradient-to-b from-transparent to-[#ECE6E2]/50 pointer-events-none"></div>
             
             {/* Dynamic New Demand (Delhi) */}
             {newDemandAppeared && (
@@ -103,7 +103,7 @@ export default function InsightsPage() {
                     <div className="font-bold text-gray-900 mb-2">50 Sambalpuri Sarees (Diwali)</div>
                     <div className="flex justify-between items-center bg-gray-50 p-2 rounded-lg">
                       <span className="text-xs font-bold text-gray-600">Offered Price</span>
-                      <span className="text-sm font-bold text-[#1A4731]">₹3,800/unit</span>
+                      <span className="text-sm font-bold text-[#24332C]">₹3,800/unit</span>
                     </div>
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function InsightsPage() {
 
         {/* Right Column: AI Actionable Advice */}
         <div className="space-y-6">
-          <div className="bg-[#0F2D20] text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
+          <div className="bg-[#14211B] text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
             
             <h3 className="text-lg font-bold mb-2 flex items-center gap-2"><TrendingUp size={20}/> AI Recommendation</h3>
@@ -203,7 +203,7 @@ export default function InsightsPage() {
               <div className="text-sm font-bold">Hold current inventory and list directly on ONDC for B2C buyers.</div>
             </div>
 
-            <Link href="/artisan/dashboard" className="block w-full bg-white text-[#0F2D20] text-center py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors">
+            <Link href="/artisan/dashboard" className="block w-full bg-white text-[#14211B] text-center py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors">
               List on ONDC
             </Link>
           </div>

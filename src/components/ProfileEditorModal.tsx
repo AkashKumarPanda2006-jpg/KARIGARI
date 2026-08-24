@@ -19,6 +19,10 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
   const [name, setName] = useState(artisanData?.name || "");
   const [mobileNumber, setMobileNumber] = useState(artisanData?.mobileNumber || "");
   const [aadhaarLast4, setAadhaarLast4] = useState(artisanData?.aadhaarLast4 || "");
+  const [socialCategory, setSocialCategory] = useState(artisanData?.socialCategory || "");
+  const [annualIncome, setAnnualIncome] = useState(
+    artisanData?.annualIncome === null || artisanData?.annualIncome === undefined ? "" : String(artisanData.annualIncome)
+  );
   const [upiId, setUpiId] = useState(artisanData?.upiId || "");
   const [description, setDescription] = useState(artisanData?.description || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -26,16 +30,22 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
   const [listeningField, setListeningField] = useState<'name' | 'desc' | null>(null);
   const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
 
+  // Re-hydrate on every OPEN, not just when the object identity changes —
+  // otherwise edits abandoned with Cancel survive and get written on the next save.
   useEffect(() => {
-    if (artisanData) {
+    if (isOpen && artisanData) {
       setPhotoUrl(artisanData.photoUrl || "/female_artisan.jpg");
       setName(artisanData.name || "");
       setMobileNumber(artisanData.mobileNumber || "");
       setAadhaarLast4(artisanData.aadhaarLast4 || "");
+      setSocialCategory(artisanData.socialCategory || "");
+      setAnnualIncome(
+        artisanData.annualIncome === null || artisanData.annualIncome === undefined ? "" : String(artisanData.annualIncome)
+      );
       setUpiId(artisanData.upiId || "");
       setDescription(artisanData.description || "");
     }
-  }, [artisanData]);
+  }, [artisanData, isOpen]);
 
   const toggleListening = (field: 'name' | 'desc') => {
     if (listeningField === field && recognitionInstance) {
@@ -113,13 +123,55 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
 
   if (!isOpen) return null;
 
+  // Opened before the profile finished loading. Rendering the form here would let
+  // Save write blanks over exactly the columns the eligibility engine reads
+  // (aadhaarLast4, upiId, socialCategory, annualIncome), so refuse instead.
+  if (!artisanData) {
+    return (
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl">
+          <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h2 className="font-serif font-bold text-lg text-primary">Edit Profile</h2>
+            <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500" aria-label="Close">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="p-6">
+            <p className="text-sm text-gray-600">
+              Your profile could not be loaded, so it cannot be edited right now. Close this
+              and refresh the page.
+            </p>
+          </div>
+          <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+            <button onClick={onClose} className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Blank means "not recorded" — send null so the server clears the field
+      // instead of storing an empty string the eligibility engine can't read.
+      const parsedIncome = annualIncome.trim() === "" ? null : Number(annualIncome);
+
       const res = await fetch("/api/artisan/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, photoUrl, upiId, description, mobileNumber, aadhaarLast4 })
+        body: JSON.stringify({
+          name,
+          photoUrl,
+          upiId,
+          description,
+          mobileNumber,
+          aadhaarLast4,
+          socialCategory: socialCategory === "" ? null : socialCategory,
+          annualIncome: parsedIncome !== null && Number.isFinite(parsedIncome) ? parsedIncome : null
+        })
       });
       if (res.ok) {
         onSaved();
@@ -214,6 +266,38 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
                 Verify
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Social Category</label>
+            <select
+              value={socialCategory}
+              onChange={(e) => setSocialCategory(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+            >
+              <option value="">Select category</option>
+              <option value="SC">SC — Scheduled Caste</option>
+              <option value="ST">ST — Scheduled Tribe</option>
+              <option value="OBC">OBC — Other Backward Classes</option>
+              <option value="EWS">EWS — Economically Weaker Section</option>
+              <option value="GENERAL">General</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1.5">
+              Used to check NSFDC / NBCFDC eligibility. Never shared with buyers.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Annual Household Income (₹)</label>
+            <input
+              type="number"
+              min={0}
+              step={1000}
+              value={annualIncome}
+              onChange={(e) => setAnnualIncome(e.target.value)}
+              placeholder="e.g. 120000"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+            />
           </div>
 
           <div>
