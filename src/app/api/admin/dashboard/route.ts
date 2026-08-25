@@ -93,7 +93,8 @@ export async function GET(req: Request) {
     const leaderboard = allArtisans.map((a: any) => {
       let earnings = 0;
       a.craftItems.forEach((ci: any) => {
-        earnings += (ci.advancePaid || ci.fairWageFloor || 0) + (ci.finalPayoutQueued || 0);
+        // Real money only: advance actually disbursed plus final payout queued.
+        earnings += (ci.advancePaid || 0) + (ci.finalPayoutQueued || 0);
       });
       return {
         id: a.id,

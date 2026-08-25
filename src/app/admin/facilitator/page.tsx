@@ -67,6 +67,7 @@ interface QueueItem {
   voiceLanguage: string | null;
   fairWageFloor: number | null;
   salePrice: number | null;
+  askingPrice: number | null;
   resolution: "OPEN" | "INVESTIGATING" | "OVERRIDE_APPROVED";
   flagReason: string | null;
   discrepancy: Discrepancy;
@@ -210,7 +211,12 @@ export default function FacilitatorDashboard() {
     }
   };
 
-  const publishItem = async (itemId: string) => {
+  /**
+   * QA approval. There is no separate "publish" step any more — verify-batch
+   * attaches the Patch ID and lists the item with the artisan's own English
+   * description in the same transaction.
+   */
+  const approveItem = async (itemId: string) => {
     setBusyId(itemId);
     try {
       const res = await fetch("/api/admin/verify-batch", {
@@ -219,8 +225,10 @@ export default function FacilitatorDashboard() {
         body: JSON.stringify({ itemIds: [itemId] }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not publish the listing.");
-      setToast("Translation approved. Listing published with a Patch ID.");
+      if (!res.ok) throw new Error(data.error || "Could not approve the listing.");
+      setToast(
+        "Translation approved. Patch ID attached and the listing went live with the artisan's own description."
+      );
       await load();
     } catch (e) {
       setToast(errorMessage(e));
@@ -318,7 +326,7 @@ export default function FacilitatorDashboard() {
             busyId={busyId}
             onResolve={resolveFlag}
           />
-          <VoiceQaCenter items={queue.voiceQueue} busyId={busyId} onPublish={publishItem} />
+          <VoiceQaCenter items={queue.voiceQueue} busyId={busyId} onApprove={approveItem} />
         </div>
       ) : (
         <ClusterTab
@@ -404,7 +412,7 @@ function PricingQueue({
                 <span className="font-bold text-gray-900">{item.craftType}</span>
                 <span className="text-gray-500">{item.artisan.name}</span>
                 <span className="text-gray-400 font-mono text-xs">
-                  {formatRupees(item.fairWageFloor)} → {formatRupees(item.salePrice)}
+                  {formatRupees(item.fairWageFloor)} → {formatRupees(item.salePrice ?? item.askingPrice)}
                 </span>
                 <span className="ml-auto text-xs font-bold text-green-700 bg-green-50 border border-green-100 px-2 py-1 rounded-full">
                   Override approved
@@ -472,8 +480,8 @@ function PricingRow({
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-5 lg:w-[36%] border-b lg:border-b-0 lg:border-r border-gray-100">
           <PriceCell label="AI Fair Price" value={formatRupees(item.fairWageFloor)} />
           <PriceCell
-            label="Accepted Price"
-            value={formatRupees(item.salePrice)}
+            label={item.salePrice === null ? "Artisan's Price" : "Accepted Price"}
+            value={formatRupees(item.salePrice ?? item.askingPrice)}
             tone="danger"
           />
           <PriceCell
@@ -585,11 +593,11 @@ function PriceCell({
 function VoiceQaCenter({
   items,
   busyId,
-  onPublish,
+  onApprove,
 }: {
   items: QueueItem[];
   busyId: string | null;
-  onPublish: (id: string) => void;
+  onApprove: (id: string) => void;
 }) {
   return (
     <section>
@@ -609,7 +617,7 @@ function VoiceQaCenter({
       ) : (
         <div className="space-y-4">
           {items.map((item) => (
-            <VoiceQaCard key={item.id} item={item} busy={busyId === item.id} onPublish={onPublish} />
+            <VoiceQaCard key={item.id} item={item} busy={busyId === item.id} onApprove={onApprove} />
           ))}
         </div>
       )}
@@ -620,11 +628,11 @@ function VoiceQaCenter({
 function VoiceQaCard({
   item,
   busy,
-  onPublish,
+  onApprove,
 }: {
   item: QueueItem;
   busy: boolean;
-  onPublish: (id: string) => void;
+  onApprove: (id: string) => void;
 }) {
   const hasAudio = Boolean(item.audioUrl);
 
@@ -645,13 +653,16 @@ function VoiceQaCard({
           <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
             AI floor {formatRupees(item.fairWageFloor)}
           </span>
+          {/* Approving IS publishing: the listing goes live with the artisan's
+              own description in the same request. No second button. */}
           <button
-            onClick={() => onPublish(item.id)}
+            onClick={() => onApprove(item.id)}
             disabled={busy}
             className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+            title="Approves the translation, attaches a Patch ID and lists the item automatically"
           >
             {busy ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-            Publish
+            Approve QA
           </button>
         </div>
       </div>
