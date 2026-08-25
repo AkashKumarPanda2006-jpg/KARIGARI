@@ -15,8 +15,8 @@ export default function LandingPage() {
             <div className="hidden md:flex space-x-8 items-center">
               <Link href="#" className="text-gray-600 hover:text-primary transition-colors font-medium">Home</Link>
               <Link href="#" className="text-gray-600 hover:text-primary transition-colors font-medium">How it Works</Link>
-              <Link href="#" className="text-gray-600 hover:text-primary transition-colors font-medium">For Artisans</Link>
-              <Link href="#" className="text-gray-600 hover:text-primary transition-colors font-medium">For Admins</Link>
+              <Link href="/login" className="text-gray-600 hover:text-primary transition-colors font-medium">For Artisans</Link>
+              <Link href="/login" className="text-gray-600 hover:text-primary transition-colors font-medium">For Admins</Link>
             </div>
 
             <div className="flex items-center gap-4">
@@ -60,11 +60,11 @@ export default function LandingPage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                <Link href="/artisan/dashboard" className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-soft flex items-center justify-center gap-2 group">
+                <Link href="/login" className="bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-soft flex items-center justify-center gap-2 group">
                   For Artisans
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <Link href="/admin/facilitator" className="bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-200 px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-soft flex items-center justify-center">
+                <Link href="/login" className="bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-200 px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-soft flex items-center justify-center">
                   For Admins
                 </Link>
               </div>

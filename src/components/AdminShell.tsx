@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShieldCheck, Landmark, LogOut, Menu, X, Calendar, RefreshCw } from "lucide-react";
+import { ShieldCheck, Landmark, LogOut, Menu, X, Calendar, RefreshCw, Loader2 } from "lucide-react";
 import { KarigariLogo } from "@/components/ui/KarigariLogo";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,20 @@ export function AdminShell({ title, subtitle, flagBadge, actions, children }: Ad
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+
+  React.useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || data.role !== 'ADMIN') {
+          router.replace('/login');
+        } else {
+          setAuthorized(true);
+        }
+      })
+      .catch(() => router.replace('/login'));
+  }, [router]);
 
   // `auth-token` is httpOnly, so it can only be cleared by the server.
   const handleLogout = async () => {
@@ -38,6 +52,14 @@ export function AdminShell({ title, subtitle, flagBadge, actions, children }: Ad
     router.replace("/login");
     router.refresh();
   };
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="animate-spin text-[var(--color-primary)]" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-background)] flex">

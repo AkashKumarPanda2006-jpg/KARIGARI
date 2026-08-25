@@ -74,6 +74,8 @@ async function main() {
   console.log('Seeding KARIGARI database...');
 
   await prisma.auditLog.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.demand.deleteMany();
   await prisma.schemeApplication.deleteMany();
   await prisma.craftItem.deleteMany();
   await prisma.artisanProfile.deleteMany();
@@ -267,6 +269,11 @@ async function main() {
   }
   const clusterCount = new Set(artisanSeeds.map((a) => a.clusterName)).size;
   console.log(`${artisanSeeds.length} artisans created across ${clusterCount} clusters`);
+  console.log('--- ARTISAN ACCOUNTS (password: password123) ---');
+  for (const a of artisanSeeds) {
+    console.log(`- ${a.email} (${a.craftType})`);
+  }
+  console.log('------------------------------------------------');
 
   // ---------------------------------------------------------------------
   // 3. Craft items. descriptionOriginal is the raw regional transcript,
@@ -772,6 +779,184 @@ async function main() {
 
   await prisma.schemeApplication.createMany({ data: schemeApplicationSeeds });
   console.log(`${schemeApplicationSeeds.length} scheme applications seeded`);
+
+  // ---------------------------------------------------------------------
+  // 5. Buyer demand board. Every surface that used to hardcode a demand pin
+  //    (the insights map, the WhatsApp simulation, the buyer ticket) reads
+  //    these rows, so the demo has real data on first load.
+  // ---------------------------------------------------------------------
+  const demandSeeds: {
+    id: string;
+    craftType: string;
+    quantity: number;
+    targetPriceMin: number;
+    targetPriceMax: number;
+    location: string;
+    festival: string | null;
+    buyerName: string;
+    notes: string;
+    status: string;
+    createdAt: Date;
+  }[] = [
+    {
+      id: 'demand-delhi-sambalpuri',
+      craftType: 'Sambalpuri Bandha',
+      quantity: 50,
+      targetPriceMin: 3500,
+      targetPriceMax: 4000,
+      location: 'Delhi NCR',
+      festival: 'Diwali',
+      buyerName: 'Rajesh Retailers',
+      notes: 'Festive collection for 12 stores. Needs GI-tagged handloom only.',
+      status: 'OPEN',
+      createdAt: daysAgo(1),
+    },
+    {
+      id: 'demand-mumbai-pochampally',
+      craftType: 'Pochampally Ikat',
+      quantity: 120,
+      targetPriceMin: 4200,
+      targetPriceMax: 5200,
+      location: 'Mumbai',
+      festival: 'Diwali',
+      buyerName: 'Aarna Boutique Group',
+      notes: 'Double-ikat silk sarees for the Diwali window. Staggered delivery accepted.',
+      status: 'OPEN',
+      createdAt: daysAgo(3),
+    },
+    {
+      id: 'demand-bengaluru-banarasi',
+      craftType: 'Banarasi Silk',
+      quantity: 40,
+      targetPriceMin: 6000,
+      targetPriceMax: 8000,
+      location: 'Bengaluru',
+      festival: 'North Indian Wedding Season',
+      buyerName: 'Tech Park Gifting Co.',
+      notes: 'Bridal-grade brocade for corporate wedding gifting hampers.',
+      status: 'OPEN',
+      createdAt: daysAgo(5),
+    },
+    {
+      id: 'demand-hyderabad-pottery',
+      craftType: 'Khurja Pottery',
+      quantity: 200,
+      targetPriceMin: 450,
+      targetPriceMax: 700,
+      location: 'Hyderabad',
+      festival: 'Ganesh Chaturthi',
+      buyerName: 'Deccan Home Store',
+      notes: 'Planter sets and dinnerware for the festive home decor aisle.',
+      status: 'OPEN',
+      createdAt: daysAgo(2),
+    },
+    {
+      id: 'demand-kolkata-sonepuri',
+      craftType: 'Sonepuri Silk',
+      quantity: 60,
+      targetPriceMin: 3800,
+      targetPriceMax: 4600,
+      location: 'Kolkata',
+      festival: 'Durga Puja',
+      buyerName: 'Baithak Handlooms',
+      notes: 'Puja-week stock. Prefers weavers inside the Bargarh cluster.',
+      status: 'OPEN',
+      createdAt: daysAgo(4),
+    },
+    {
+      id: 'demand-pune-filigree',
+      craftType: 'Cuttack Silver Filigree',
+      quantity: 80,
+      targetPriceMin: 1800,
+      targetPriceMax: 2600,
+      location: 'Pune',
+      festival: null,
+      buyerName: 'Silverline Exports',
+      notes: 'Export sampling order — already matched with a Cuttack workshop.',
+      status: 'MATCHED',
+      createdAt: daysAgo(12),
+    },
+  ];
+
+  await prisma.demand.createMany({ data: demandSeeds });
+  console.log(
+    `${demandSeeds.length} buyer demands seeded (${demandSeeds.filter((d) => d.status === 'OPEN').length} open)`
+  );
+
+  // ---------------------------------------------------------------------
+  // 6. Notifications. These are the rows the header bell reads and the
+  //    WhatsApp/SMS simulation replays — one per artisan whose craft matches
+  //    an open demand, plus a festival nudge.
+  // ---------------------------------------------------------------------
+  const notificationSeeds: {
+    userId: string;
+    type: string;
+    title: string;
+    message: string;
+    read: boolean;
+    relatedDemandId: string | null;
+    channel: string;
+    createdAt: Date;
+  }[] = [
+    {
+      userId: artisans.sunita.id,
+      type: 'DEMAND_ALERT',
+      title: 'Demand spike: Sambalpuri Bandha',
+      message:
+        'Rajesh Retailers wants 50 Sambalpuri Bandha pieces in Delhi NCR at Rs 3,500-4,000 per unit for Diwali. Reply YES to list your stock.',
+      read: false,
+      relatedDemandId: 'demand-delhi-sambalpuri',
+      channel: 'WHATSAPP',
+      createdAt: daysAgo(1),
+    },
+    {
+      userId: artisans.lakshmi.id,
+      type: 'DEMAND_ALERT',
+      title: 'Demand spike: Pochampally Ikat',
+      message:
+        'Aarna Boutique Group wants 120 Pochampally Ikat pieces in Mumbai at Rs 4,200-5,200 per unit for Diwali. Reply YES to list your stock.',
+      read: false,
+      relatedDemandId: 'demand-mumbai-pochampally',
+      channel: 'WHATSAPP',
+      createdAt: daysAgo(3),
+    },
+    {
+      userId: artisans.ramesh.id,
+      type: 'DEMAND_ALERT',
+      title: 'Demand spike: Sonepuri Silk',
+      message:
+        'Baithak Handlooms wants 60 Sonepuri Silk pieces in Kolkata at Rs 3,800-4,600 per unit for Durga Puja. Reply YES to list your stock.',
+      read: false,
+      relatedDemandId: 'demand-kolkata-sonepuri',
+      channel: 'SMS',
+      createdAt: daysAgo(4),
+    },
+    {
+      userId: artisans.anita.id,
+      type: 'DEMAND_ALERT',
+      title: 'Demand spike: Banarasi Silk',
+      message:
+        'Tech Park Gifting Co. wants 40 Banarasi Silk pieces in Bengaluru at Rs 6,000-8,000 per unit for the wedding season. Reply YES to list your stock.',
+      read: true,
+      relatedDemandId: 'demand-bengaluru-banarasi',
+      channel: 'WHATSAPP',
+      createdAt: daysAgo(5),
+    },
+    {
+      userId: artisans.mohan.id,
+      type: 'FESTIVAL',
+      title: 'Ganesh Chaturthi is close',
+      message:
+        'Idol and decor demand rises before Ganesh Chaturthi. Terracotta and pottery sell out early — list your stock this week.',
+      read: false,
+      relatedDemandId: null,
+      channel: 'IN_APP',
+      createdAt: daysAgo(2),
+    },
+  ];
+
+  await prisma.notification.createMany({ data: notificationSeeds });
+  console.log(`${notificationSeeds.length} notifications seeded`);
 
   console.log('Seeding complete.');
 }

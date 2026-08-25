@@ -18,11 +18,13 @@ import {
   Loader2,
   ShieldCheck,
   UserCheck,
+  Wand2,
   X,
 } from "lucide-react";
 import { useLanguage } from "@/lib/translations";
 import { KarigariLogo } from "@/components/ui/KarigariLogo";
 import { ProfileEditorModal } from "@/components/ProfileEditorModal";
+import { SchemeFormAssistant } from "@/components/SchemeFormAssistant";
 import { PM_VISHWAKARMA_TRADES } from "@/lib/schemes";
 import type {
   ApplicationStatus,
@@ -131,6 +133,8 @@ export default function SchemesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  /** Scheme whose application form the auto-fill assistant is preparing. */
+  const [assistantTarget, setAssistantTarget] = useState<EvaluatedScheme | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
   /** `t()` returns the key itself when a language has no entry — fall back to server copy. */
@@ -152,7 +156,7 @@ export default function SchemesPage() {
 
       // A signed-in-but-unknown user (e.g. the database was re-seeded under a
       // live session) can never be fixed by retrying — send them to sign in.
-      if (schemeRes.status === 401) {
+      if (schemeRes.status === 401 || schemeRes.status === 403) {
         await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
         router.replace("/login");
         return;
@@ -421,6 +425,7 @@ export default function SchemesPage() {
                 onToggle={() => setExpanded(expanded === s.key ? null : s.key)}
                 onApply={() => openApply(s)}
                 onCompleteProfile={() => setProfileOpen(true)}
+                onPrepareForm={() => setAssistantTarget(s)}
               />
             ))}
           </div>
@@ -451,6 +456,7 @@ export default function SchemesPage() {
                 onToggle={() => setExpanded(expanded === s.key ? null : s.key)}
                 onApply={() => openApply(s)}
                 onCompleteProfile={() => setProfileOpen(true)}
+                onPrepareForm={() => setAssistantTarget(s)}
               />
             ))}
           </div>
@@ -563,6 +569,26 @@ export default function SchemesPage() {
         </div>
       )}
 
+      <SchemeFormAssistant
+        scheme={
+          assistantTarget
+            ? {
+                key: assistantTarget.key,
+                name: assistantTarget.name,
+                benefit: assistantTarget.benefit,
+                officialUrl: assistantTarget.officialUrl,
+                formPath: assistantTarget.formPath,
+              }
+            : null
+        }
+        profile={{
+          ...(profileSummary ?? {}),
+          name: editorData?.name ?? null,
+          mobileNumber: editorData?.mobileNumber ?? null,
+        }}
+        onClose={() => setAssistantTarget(null)}
+      />
+
       <ProfileEditorModal
         isOpen={profileOpen}
         onClose={() => setProfileOpen(false)}
@@ -587,6 +613,7 @@ function SchemeCard({
   onToggle,
   onApply,
   onCompleteProfile,
+  onPrepareForm,
 }: {
   scheme: EvaluatedScheme;
   tr: (key: string, fallback: string) => string;
@@ -594,6 +621,7 @@ function SchemeCard({
   onToggle: () => void;
   onApply: () => void;
   onCompleteProfile: () => void;
+  onPrepareForm: () => void;
 }) {
   const { verdict, application } = scheme;
   const isEligible = verdict.status === "ELIGIBLE";
@@ -775,6 +803,15 @@ function SchemeCard({
                 <p className="text-[11px] text-gray-500 text-center leading-snug">
                   {tr("schemes_opens_portal", "Opens the official government portal")}
                 </p>
+                {/* Prepares the form from the stored profile. It still has to be
+                    submitted by the artisan on the portal above. */}
+                <button
+                  onClick={onPrepareForm}
+                  className="bg-[var(--color-mint)] border border-[var(--color-sage)] text-primary hover:bg-[var(--color-sage)]/40 w-full py-2.5 rounded-xl font-bold shadow-sm transition-colors text-sm flex items-center justify-center gap-2"
+                >
+                  <Wand2 size={15} />
+                  {tr("schemes_autofill", "Auto-fill my form")}
+                </button>
                 {canApply && (
                   <button
                     onClick={onApply}

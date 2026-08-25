@@ -12,10 +12,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     // There is exactly one admin role. The demo admin (superadmin@karigari.com)
     // is a normal seeded ADMIN row and authenticates through the same path as
     // everyone else — the token payload is always just { userId, role }.
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }

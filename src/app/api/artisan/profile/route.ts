@@ -27,6 +27,20 @@ function parseSocialCategory(
   return { ok: true, value: normalized as SocialCategory };
 }
 
+/**
+ * The demand map pins an artisan by this string, so an empty one is worse than
+ * no update at all: it silently removes their pin. Blank is therefore rejected
+ * rather than written, and the column is left untouched when the key is absent.
+ */
+function parseLocation(
+  value: unknown
+): { ok: true; value: string } | { ok: false; error: string } {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return { ok: false, error: 'location must be a non-empty town or city name' };
+  }
+  return { ok: true, value: value.trim().slice(0, 120) };
+}
+
 function parseAnnualIncome(
   value: unknown
 ): { ok: true; value: number | null } | { ok: false; error: string } {
@@ -46,9 +60,12 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let decoded: any;
+    let decoded: { userId: string; role: string };
     try {
-      decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'fallback-secret');
+      decoded = jwt.verify(token.value, process.env.JWT_SECRET || 'fallback-secret') as {
+        userId: string;
+        role: string;
+      };
     } catch {
       // An expired or tampered token is an auth failure, not a server fault —
       // and the raw jwt error must not be echoed back to the caller.
@@ -72,6 +89,15 @@ export async function PUT(req: Request) {
         return NextResponse.json({ success: false, error: parsed.error }, { status: 400 });
       }
       socialCategory = parsed.value;
+    }
+
+    let location: string | undefined;
+    if (Object.prototype.hasOwnProperty.call(body ?? {}, 'location')) {
+      const parsed = parseLocation(body.location);
+      if (!parsed.ok) {
+        return NextResponse.json({ success: false, error: parsed.error }, { status: 400 });
+      }
+      location = parsed.value;
     }
 
     let annualIncome: number | null | undefined;
@@ -101,12 +127,15 @@ export async function PUT(req: Request) {
         mobileNumber,
         aadhaarLast4,
         socialCategory,
-        annualIncome
+        annualIncome,
+        location
       },
       create: {
         userId,
         craftType: 'Unknown',
-        location: 'Unknown',
+        // 'Unknown' is unresolvable on purpose: the insights page then shows the
+        // "complete your profile" banner instead of dropping a guessed pin.
+        location: location ?? 'Unknown',
         experienceYears: 0,
         photoUrl,
         upiId,
@@ -119,8 +148,8 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json({ success: true, data: profile });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Profile update error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to save profile' }, { status: 500 });
   }
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Save, Upload, User, Mic } from "lucide-react";
+import { X, Save, Upload, User, Mic, MapPin, Info } from "lucide-react";
+import { CITY_OPTIONS, locateCity } from "@/lib/indiaGeo";
 import { useLanguage, Language } from "@/lib/translations";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
   const [annualIncome, setAnnualIncome] = useState(
     artisanData?.annualIncome === null || artisanData?.annualIncome === undefined ? "" : String(artisanData.annualIncome)
   );
+  const [location, setLocation] = useState(artisanData?.location || "");
   const [upiId, setUpiId] = useState(artisanData?.upiId || "");
   const [description, setDescription] = useState(artisanData?.description || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -42,6 +44,7 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
       setAnnualIncome(
         artisanData.annualIncome === null || artisanData.annualIncome === undefined ? "" : String(artisanData.annualIncome)
       );
+      setLocation(artisanData.location || "");
       setUpiId(artisanData.upiId || "");
       setDescription(artisanData.description || "");
     }
@@ -152,6 +155,8 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
     );
   }
 
+  const locationResolves = Boolean(locateCity(location));
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -165,6 +170,7 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
         body: JSON.stringify({
           name,
           photoUrl,
+          location,
           upiId,
           description,
           mobileNumber,
@@ -298,6 +304,39 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
               placeholder="e.g. 120000"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-1 flex items-center gap-1">
+              <MapPin size={14} /> Town or City
+            </label>
+            <input
+              type="text"
+              list="karigari-profile-cities"
+              autoComplete="off"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Start typing, e.g. Pochampally"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+            />
+            <datalist id="karigari-profile-cities">
+              {CITY_OPTIONS.map((city) => (
+                <option key={city} value={city} />
+              ))}
+            </datalist>
+            {location.trim() !== "" && !locationResolves ? (
+              <p className="mt-1.5 flex items-start gap-1.5 text-xs text-amber-700">
+                <Info size={13} className="shrink-0 mt-0.5" />
+                <span>
+                  We cannot place this on the demand map. Pick the nearest town from the list —
+                  a state name on its own will not place a pin.
+                </span>
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1.5">
+                This is where your pin sits on the demand map, and how buyers near you are ranked.
+              </p>
+            )}
           </div>
 
           <div>
