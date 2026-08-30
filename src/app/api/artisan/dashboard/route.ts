@@ -40,21 +40,30 @@ export async function GET(req: Request) {
       pastWeekCaptures,
       pastWeekAdvancedItems,
       pastWeekSold,
-      pastWeekQueued
+      pastWeekQueued,
+      pendingIvrItems
     ] = await Promise.all([
       prisma.user.findUnique({ 
         where: { id: artisanId }, 
         include: { artisanProfile: true, schemeApplications: true } 
       }),
       prisma.craftItem.count({ where: { artisanId } }),
-      prisma.craftItem.findMany({ where: { artisanId, status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } }, select: { advancePaid: true, fairWageFloor: true } }),
+      prisma.craftItem.findMany({ where: { artisanId, status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] } }, select: { advancePaid: true } }),
       prisma.craftItem.count({ where: { artisanId, status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] } } }),
       prisma.craftItem.aggregate({ _sum: { finalPayoutQueued: true }, where: { artisanId, status: 'SOLD_FINAL' } }),
-      prisma.craftItem.findMany({ where: { artisanId }, orderBy: { createdAt: 'desc' }, take: 10 }),
+      // auditLogs travel with the item so "View Details" can render the same
+      // Product Timeline the public passport shows, without a second round trip.
+      prisma.craftItem.findMany({
+        where: { artisanId },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: { auditLogs: { orderBy: { createdAt: 'desc' } } }
+      }),
       prisma.craftItem.count({ where: { artisanId, createdAt: { gte: oneWeekAgo } } }),
-      prisma.craftItem.findMany({ where: { artisanId, status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] }, createdAt: { gte: oneWeekAgo } }, select: { advancePaid: true, fairWageFloor: true } }),
+      prisma.craftItem.findMany({ where: { artisanId, status: { in: ['ADVANCE_PAID', 'SOLD_FINAL'] }, createdAt: { gte: oneWeekAgo } }, select: { advancePaid: true } }),
       prisma.craftItem.count({ where: { artisanId, status: { in: ['SOLD_FINAL', 'SOLD_MIDDLEMAN'] }, createdAt: { gte: oneWeekAgo } } }),
-      prisma.craftItem.aggregate({ _sum: { finalPayoutQueued: true }, where: { artisanId, status: 'SOLD_FINAL', createdAt: { gte: oneWeekAgo } } })
+      prisma.craftItem.aggregate({ _sum: { finalPayoutQueued: true }, where: { artisanId, status: 'SOLD_FINAL', createdAt: { gte: oneWeekAgo } } }),
+      prisma.ivrDummyItem.findMany({ where: { artisanId, status: 'PENDING_CAPTURE' }, orderBy: { createdAt: 'desc' } })
     ]);
 
     if (!user) {
@@ -64,10 +73,12 @@ export async function GET(req: Request) {
       );
     }
 
-    const totalAdvances = advancedItems.reduce((sum: number, item: any) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
+    // Only money actually disbursed counts. The `fairWageFloor` fallback that used
+    // to sit here invented an advance for every item that had not been paid yet.
+    const totalAdvances = advancedItems.reduce((sum: number, item: any) => sum + (item.advancePaid || 0), 0);
     const totalEarnings = totalAdvances + (queued._sum.finalPayoutQueued || 0);
 
-    const pastWeekAdvances = pastWeekAdvancedItems.reduce((sum: number, item: any) => sum + (item.advancePaid || item.fairWageFloor || 0), 0);
+    const pastWeekAdvances = pastWeekAdvancedItems.reduce((sum: number, item: any) => sum + (item.advancePaid || 0), 0);
     const pastWeekEarnings = pastWeekAdvances + (pastWeekQueued._sum.finalPayoutQueued || 0);
 
     return NextResponse.json({
@@ -83,6 +94,7 @@ export async function GET(req: Request) {
         healthScore: user?.artisanProfile?.healthScore ?? 100,
         accountStatus: user?.accountStatus ?? 'ACTIVE',
         recentCaptures,
+        pendingIvrItems,
         trends: {
           captures: `+${pastWeekCaptures}`,
           advances: `+₹${pastWeekAdvances.toLocaleString()}`,

@@ -608,6 +608,7 @@ async function main() {
         assignedAdminId: s.status === 'PENDING_VERIFICATION' ? null : admin.id,
         patchId: s.patchId,
         craftType: s.craftType,
+        inventory: Math.floor(Math.random() * 200 + 100),
         descriptionOriginal: s.descriptionOriginal,
         descriptionEnglish: s.descriptionEnglish,
         aiGeneratedListing: s.aiGeneratedListing,

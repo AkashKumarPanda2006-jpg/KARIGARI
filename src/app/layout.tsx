@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { OfflineSyncProvider } from "@/components/OfflineSyncProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +28,9 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans text-gray-900 bg-background">{children}</body>
+      <body className="min-h-full flex flex-col font-sans text-gray-900 bg-background">
+        <OfflineSyncProvider>{children}</OfflineSyncProvider>
+      </body>
     </html>
   );
 }

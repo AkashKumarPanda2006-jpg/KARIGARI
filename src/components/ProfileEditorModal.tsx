@@ -376,9 +376,9 @@ export function ProfileEditorModal({ isOpen, onClose, artisanData, onSaved }: Pr
           <button onClick={onClose} className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors">
             Cancel
           </button>
-          <button 
-            onClick={handleSave} 
-            disabled={isSaving}
+          <button
+              onClick={handleSave}
+              disabled={isSaving || !location.trim() || !locationResolves}
             className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition-colors flex items-center gap-2"
           >
             {isSaving ? "Saving..." : <><Save size={18} /> Save Profile</>}

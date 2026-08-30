@@ -689,7 +689,7 @@ function VoiceQaCard({
         </div>
 
         {/* Column 2 — raw regional transcript */}
-        <div className="p-5">
+        <div className="p-5 flex flex-col">
           <ColumnLabel>
             Raw Transcript
             <span className="ml-1.5 text-primary">
@@ -698,29 +698,43 @@ function VoiceQaCard({
                 : ""}
             </span>
           </ColumnLabel>
-          <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
-            {item.descriptionOriginal || (
-              <span className="italic text-gray-400">No transcript recorded.</span>
-            )}
+          <textarea 
+            className="w-full text-sm text-gray-800 leading-relaxed bg-white border border-gray-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-primary/20 focus:outline-none flex-grow"
+            defaultValue={item.descriptionOriginal || ""}
+            placeholder="No transcript recorded."
+          />
+          <p className="text-[10px] text-gray-400 mt-2 italic flex items-center gap-1">
+            <ShieldCheck size={10} /> Editable: Correct AI transcription errors here
           </p>
         </div>
 
         {/* Column 3 — final AI English */}
-        <div className="p-5">
+        <div className="p-5 flex flex-col">
           <ColumnLabel>Final AI English</ColumnLabel>
-          <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
-            {item.descriptionEnglish || item.aiGeneratedListing || (
-              <span className="italic text-gray-400">No English listing generated.</span>
-            )}
+          <textarea 
+            className="w-full text-sm text-gray-800 leading-relaxed bg-white border border-gray-200 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-primary/20 focus:outline-none flex-grow"
+            defaultValue={item.descriptionEnglish || item.aiGeneratedListing || ""}
+            placeholder="No English listing generated."
+          />
+          <p className="text-[10px] text-gray-400 mt-2 italic flex items-center gap-1">
+            <ShieldCheck size={10} /> Editable: Correct AI translation hallucinations here
           </p>
-          {item.aiGeneratedListing && item.descriptionEnglish && (
-            <p className="text-xs text-gray-500 leading-relaxed mt-3 pt-3 border-t border-gray-100">
-              <span className="font-bold uppercase tracking-wider text-[10px] text-gray-400 block mb-1">
-                Marketplace copy
-              </span>
-              {item.aiGeneratedListing}
-            </p>
-          )}
+          
+          <div className="mt-4 pt-3 border-t border-gray-100 flex flex-col gap-2">
+            <span className="font-bold uppercase tracking-wider text-[10px] text-red-500 flex items-center gap-1">
+              <ShieldAlert size={12} /> System Locked (Non-Editable)
+            </span>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+               <div className="bg-gray-50 border border-gray-100 p-2 rounded flex flex-col">
+                 <span className="text-gray-400 font-bold text-[9px] uppercase">Labor Days</span>
+                 <span className="font-mono text-gray-700">{item.laborDays ?? 'N/A'}</span>
+               </div>
+               <div className="bg-gray-50 border border-gray-100 p-2 rounded flex flex-col">
+                 <span className="text-gray-400 font-bold text-[9px] uppercase">Material Cost</span>
+                 <span className="font-mono text-gray-700">₹{item.rawMaterialCost ?? 'N/A'}</span>
+               </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

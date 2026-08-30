@@ -108,6 +108,7 @@ export async function GET() {
         voiceLanguage: item.voiceLanguage,
         fairWageFloor: item.fairWageFloor,
         salePrice: item.salePrice,
+        askingPrice: item.askingPrice,
         resolution: resolutionOf(item.flagReason),
         flagReason: stripMarker(item.flagReason),
         discrepancy,

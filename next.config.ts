@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+});
 
 const nextConfig: NextConfig = {
+  turbopack: {},
   // Phones on the LAN hit the dev server by IP, which is a different origin
   // from localhost. Without this, the hot-reload socket is refused and the
   // console fills with WebSocket handshake errors on every page.
@@ -15,4 +23,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

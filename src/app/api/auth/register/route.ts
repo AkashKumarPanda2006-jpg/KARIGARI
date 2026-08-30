@@ -7,11 +7,14 @@ import { prisma } from '@/lib/prisma';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, password, role, craftType, location, experienceYears, aadhaarLast4, annualIncome, clusterName } = body;
+    const { name, email, password, role, craftType, location, experienceYears, aadhaarLast4, annualIncome, clusterName, businessName, gstNumber, phoneNumber } = body;
 
     // Validation
     if (!name || !email || !password || !role) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    if (!['ADMIN', 'ARTISAN', 'BUYER'].includes(role)) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
     }
     const normalizedEmail = email.toLowerCase().trim();
     if (role === 'ARTISAN' && (!aadhaarLast4 || !annualIncome)) {
@@ -31,6 +34,13 @@ export async function POST(req: Request) {
         email: normalizedEmail,
         passwordHash,
         role,
+        // Buyer-specific fields
+        ...(role === 'BUYER' && {
+          businessName: businessName || null,
+          gstNumber: gstNumber || null,
+          phoneNumber: phoneNumber || null,
+        }),
+        // Artisan-specific profile
         ...(role === 'ARTISAN' && {
           artisanProfile: {
             create: {
