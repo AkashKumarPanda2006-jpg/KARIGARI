@@ -21,7 +21,7 @@ Rural artisans in India face severe exploitation from long chains of middlemen. 
 ## 🏗️ System Architecture
 - **Framework:** Next.js 14 App Router (React, TypeScript)
 - **Database:** PostgreSQL via Prisma ORM
-- **AI Models:** Google Gemini 1.5 (`@google/genai`) for Vision, Valuation, and NLP
+- **AI Models:** Google Gemini 1.5 (`@google/genai`) for Vision, Valuation, and Grok for NLP
 - **Authentication:** Custom JWT-based Role-Based Access Control (RBAC)
 - **Deployment Strategy:** Progressive Web App (PWA) to bypass Play Store friction.
 
