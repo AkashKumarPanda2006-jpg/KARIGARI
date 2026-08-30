@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
@@ -8,23 +8,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'craftType is required' }, { status: 400 });
     }
 
-    const prompt = `You are a dynamic raw material sourcing engine for Indian artisans.
+const prompt = `You are a dynamic raw material sourcing engine for Indian artisans.
 The artisan makes: "${craftType}" and is located near "${clusterName}".
-Generate 3 realistic raw material items they would need to buy to make this craft.
-Do not include items they don't use (e.g., no gold for pottery, no clay for sarees).
-For each item, provide a realistic supplier name (a cooperative or local store), location, and price in INR (e.g. '?850').
+Generate 3 authentic raw material items they would need to buy to make this craft, sourced from realistic nearby locations in the region.
+For each item, provide a detailed description of the material, a realistic supplier name, an authentic nearby location (district/city), a local phone number, and price in INR (e.g. '₹850').
 
 Return the result as a strict JSON array of objects with this schema:
-[
-  {
-    "id": 1,
-    "name": "Specific Raw Material Name",
-    "supplier": "Realistic Supplier Name",
-    "location": "City, State",
-    "price": "?...",
-    "isVerified": true
-  }
-]`;
+{
+  "materials": [
+    {
+      "id": 1,
+      "name": "Specific Raw Material Name",
+      "description": "Detailed description of the material quality, weight, or specs.",
+      "supplier": "Realistic Supplier Name",
+      "location": "City, State",
+      "contact": "+91 98XXX XXXXX",
+      "price": "₹...",
+      "isVerified": true
+    }
+  ]
+}`;
 
     // Using Groq instead of Gemini as requested
     const apiKey = process.env.GROQ_API_KEY ;
@@ -35,13 +38,13 @@ Return the result as a strict JSON array of objects with this schema:
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "qwen/qwen3.8-27b",
+        model: "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: "You are a JSON-only API. You output raw, valid JSON arrays with no markdown formatting." },
+          { role: "system", content: "You are a JSON-only API. You output raw, valid JSON. Always wrap the array in a 'materials' object key." },
           { role: "user", content: prompt }
         ],
         temperature: 0.2,
-        response_format: { type: "json_object" } // Qwen supports JSON object, but we need an array. We will wrap the array in an object in prompt if needed, or just let it return array if it ignores json_object.
+        response_format: { type: "json_object" } 
       })
     });
 
@@ -51,41 +54,18 @@ Return the result as a strict JSON array of objects with this schema:
       throw new Error(data.error?.message || "Groq API Error");
     }
 
-    const rawText = data.choices?.[0]?.message?.content || "[]";
+    const rawText = data.choices?.[0]?.message?.content || "{}";
     
     let parsedData = [];
     try {
       let cleaned = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
-      if (cleaned.startsWith('{') && !cleaned.startsWith('[{')) {
-          // If Groq wrapped the array in an object due to json_object mode, extract it
-          const obj = JSON.parse(cleaned);
-          parsedData = obj.materials || obj.data || obj.items || Object.values(obj)[0] || [];
-          if (!Array.isArray(parsedData)) parsedData = [parsedData];
-      } else {
-          parsedData = JSON.parse(cleaned);
-      }
+      const obj = JSON.parse(cleaned);
+      parsedData = obj.materials || obj.data || obj.items || Object.values(obj)[0] || [];
+      if (!Array.isArray(parsedData)) parsedData = [parsedData];
     } catch (e) {
       console.error("Failed to parse materials:", rawText);
       throw new Error("Failed to parse: " + rawText);
     }
-
-    const stockImages = [
-      "https://images.unsplash.com/photo-1584286595398-a59f2afdd7ea?w=400&q=80", // fabric/colors
-      "https://images.unsplash.com/photo-1620799140188-3b2a02fd9a77?w=400&q=80", // cloth
-      "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&q=80", // brushes/tools
-      "https://images.unsplash.com/photo-1610738048682-990a4b711e51?w=400&q=80", // clay/pottery
-      "https://images.unsplash.com/photo-1558024220-b302c009d134?w=400&q=80", // wood/metal
-    ];
-
-    parsedData.forEach((item: any) => {
-      const text = (item.name + craftType).toLowerCase();
-      let img = stockImages[0];
-      if (text.includes("cloth") || text.includes("saree") || text.includes("silk") || text.includes("cotton") || text.includes("thread")) img = stockImages[1];
-      else if (text.includes("brush") || text.includes("tool") || text.includes("carv")) img = stockImages[2];
-      else if (text.includes("clay") || text.includes("mud") || text.includes("terracotta")) img = stockImages[3];
-      else if (text.includes("wood") || text.includes("metal") || text.includes("brass") || text.includes("wire")) img = stockImages[4];
-      item.image = img;
-    });
 
     return NextResponse.json({ success: true, data: parsedData });
 
@@ -95,8 +75,7 @@ Return the result as a strict JSON array of objects with this schema:
       success: true, 
       data: [
         {
-          id: 1, name: `Premium Artisan Material (Error: ${error.message})`, supplier: "Local Cooperative", location: "Local Cluster", price: "?500", isVerified: true,
-          image: "https://images.unsplash.com/photo-1584286595398-a59f2afdd7ea?w=400&q=80"
+          id: 1, name: `Premium Artisan Material (Error: ${error.message})`, description: "Backup description for fallback.", supplier: "Local Cooperative", location: "Local Cluster", contact: "+91 99999 99999", price: "₹500", isVerified: true
         }
       ]
     });

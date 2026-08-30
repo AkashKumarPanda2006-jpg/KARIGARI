@@ -65,40 +65,44 @@ export default function MaterialsPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-500">
             <Loader2 className="animate-spin mb-4" size={32} />
-            <p>Scanning the internet for local {craftName} suppliers...</p>
+            <p>Scanning local cooperatives and suppliers for {craftName} materials...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {materials.map((mat, i) => (
-              <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
-                <div className="h-48 bg-gray-100 relative overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={mat.image || "https://images.unsplash.com/photo-1584286595398-a59f2afdd7ea?w=400&q=80"} alt={mat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  {mat.isVerified !== false && (
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-green-700 flex items-center gap-1 shadow-sm">
-                      <ShieldCheck size={14} /> Verified Supplier
-                    </div>
-                  )}
-                </div>
-                <div className="p-5">
+              <div key={i} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group p-5 flex flex-col justify-between">
+                <div>
                   <div className="flex justify-between items-start gap-4 mb-2">
                     <h3 className="font-bold text-gray-900 text-lg leading-tight">{mat.name}</h3>
-                    <span className="font-bold text-xl text-[#24332C]">{mat.price}</span>
+                    <span className="font-bold text-xl text-[#24332C] whitespace-nowrap">{mat.price}</span>
                   </div>
-                  <div className="text-sm text-gray-600 mb-4">{mat.supplier}</div>
                   
-                  <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-gray-500 mb-6">
-                    <span className="flex items-center gap-1"><MapPin size={14} /> {mat.location}</span>
-                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    {mat.description || "High-quality raw materials suitable for traditional craft making."}
+                  </p>
 
-                  <div className="flex gap-3">
-                    <button className="flex-1 py-2.5 rounded-xl border border-gray-200 font-bold text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                      <Phone size={16} /> Contact
-                    </button>
-                    <button className="flex-1 py-2.5 rounded-xl bg-[#24332C] text-white font-bold hover:bg-[#1a2520] transition-colors flex items-center justify-center gap-2 shadow-md">
-                      Buy Now <ExternalLink size={16} />
-                    </button>
+                  <div className="text-sm font-bold text-gray-800 mb-1 flex items-center gap-2">
+                    {mat.supplier}
+                    {mat.isVerified !== false && (
+                      <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 uppercase tracking-wider">
+                        <ShieldCheck size={10} /> Verified
+                      </span>
+                    )}
                   </div>
+                  
+                  <div className="flex flex-col gap-2 text-xs font-medium text-gray-500 mb-6">
+                    <span className="flex items-center gap-2"><MapPin size={14} className="text-gray-400"/> {mat.location}</span>
+                    <span className="flex items-center gap-2"><Phone size={14} className="text-gray-400"/> {mat.contact || "Contact details hidden"}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+                  <button className="flex-1 py-2.5 rounded-xl border border-gray-200 font-bold text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                    <Phone size={16} /> Call Supplier
+                  </button>
+                  <button className="flex-1 py-2.5 rounded-xl bg-[#24332C] text-white font-bold hover:bg-[#1a2520] transition-colors flex items-center justify-center gap-2 shadow-md">
+                    Order Now <ExternalLink size={16} />
+                  </button>
                 </div>
               </div>
             ))}
