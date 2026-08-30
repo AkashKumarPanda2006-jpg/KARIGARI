@@ -54,5 +54,11 @@ Rural artisans in India face severe exploitation from long chains of middlemen. 
    ```
    *The platform will be available at `http://localhost:3000`.*
 
+## 🚀 Recent Updates
+- **Artisan Dashboard Revamp**: Balanced quick action grid and UI improvements.
+- **AI Raw Material Sourcing**: Dynamic LLM-based raw material descriptions, local supplier matching, and contact generation for authentic procurement.
+- **Insights & WhatsApp Simulator**: Intelligent demand alerts via an offline-capable SMS/WhatsApp simulator integrated into the insights map with exact geographic alignments.
+- **Streamlined Views**: Removed redundant buyer views to maintain a clean flow focusing strictly on Artisan Empowerment and government oversight.
+
 ---
 *Built with ❤️ for Smart India Hackathon.*
