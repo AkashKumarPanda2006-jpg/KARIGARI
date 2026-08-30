@@ -16,8 +16,8 @@ export default function ArtisanLayout({ children }: { children: React.ReactNode 
       .then(data => {
         if (!data.success) {
           router.replace('/login');
-        } else if (data.role !== 'ARTISAN') {
-          router.replace(data.role === 'ADMIN' ? '/admin/facilitator' : '/login');
+        } else if (data.user?.role !== 'ARTISAN') {
+          router.replace(data.user?.role === 'ADMIN' ? '/admin/facilitator' : '/login');
         } else {
           setAuthorized(true);
         }
