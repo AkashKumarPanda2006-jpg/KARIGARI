@@ -196,7 +196,7 @@ export default function ArtisanDashboard() {
           {/* Action 1 (Primary - Capture) */}
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="rounded-3xl p-6 flex flex-col justify-between min-h-[160px] relative transition-transform hover:-translate-y-1 group overflow-hidden lg:col-span-2"
+            className="rounded-3xl p-6 flex flex-col justify-between min-h-[160px] relative transition-transform hover:-translate-y-1 group overflow-hidden"
             style={{ background: 'linear-gradient(135deg,#24332C 0%, #14211B 100%)', boxShadow: '0 10px 25px -5px rgba(26,71,49,0.4)' }}
           >
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>

@@ -69,7 +69,8 @@ export default function InsightsPage() {
           </div>
           
           {/* Map Container */}
-          <div className="relative w-full aspect-video bg-[#E8EAED] rounded-xl border border-gray-200 overflow-hidden shadow-inner">
+          <div className="relative w-full bg-[#E8EAED] rounded-xl border border-gray-200 overflow-hidden shadow-inner flex justify-center bg-gray-100">
+            <div className="relative w-full max-w-[600px] aspect-square">
             {/* Realistic Map Background (OpenStreetMap) */}
             <div className="absolute inset-0 z-0">
               <iframe 
@@ -177,6 +178,7 @@ export default function InsightsPage() {
                 </div>
               </div>
             </div>
+          </div>
 
             {/* Legend */}
             <div className="flex flex-wrap gap-4 mt-6 px-2">
