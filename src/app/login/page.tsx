@@ -38,16 +38,18 @@ export default function LoginPage() {
         throw new Error(data.error || "Failed to log in");
       }
 
-      // Check if they selected the right role tab
+      // Check if they selected the right role tab (ignore for buyers logging in here)
       if (data.user.role === 'ADMIN' && role === 'ARTISAN') {
-        throw new Error(`Invalid role. This account belongs to a Admin.`);
+        throw new Error(`Invalid role. This account belongs to an Admin.`);
       } else if (data.user.role === 'ARTISAN' && role === 'ADMIN') {
         throw new Error(`Invalid role. This account belongs to an Artisan.`);
       }
 
-      // Success! One ADMIN role opens both admin dashboards; land on Facilitator.
+      // Success! Route based on actual role
       if (data.user.role === 'ADMIN') {
         router.push("/admin/facilitator");
+      } else if (data.user.role === 'BUYER') {
+        router.push("/marketplace");
       } else {
         router.push("/artisan/dashboard");
       }

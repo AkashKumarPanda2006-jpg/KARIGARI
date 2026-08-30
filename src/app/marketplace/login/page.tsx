@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -40,7 +40,7 @@ export default function MarketplaceLoginPage() {
           body: JSON.stringify({
             email,
             password,
-            fullName,
+            name: fullName,
             role: 'BUYER',
             businessName,
             gstNumber,
