@@ -49,7 +49,7 @@ export default function LoginPage() {
       if (data.user.role === 'ADMIN') {
         router.push("/admin/facilitator");
       } else if (data.user.role === 'BUYER') {
-        router.push("/marketplace");
+        router.push("/buyer");
       } else {
         router.push("/artisan/dashboard");
       }
