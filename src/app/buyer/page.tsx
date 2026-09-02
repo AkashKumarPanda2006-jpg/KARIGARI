@@ -1,21 +1,22 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
-import { Package, TrendingUp, Search, Store, ArrowRight, ShieldCheck, MapPin, Truck, Leaf, CheckCircle2, Image as ImageIcon, Upload, X, Clock, FileText, Sparkles, Check, AlertCircle, RefreshCw } from "lucide-react";
+import { Package, TrendingUp, Search, Store, ArrowRight, ShieldCheck, MapPin, Truck, Leaf, CheckCircle2, Image as ImageIcon, Upload, X, Clock, FileText, Sparkles, Check, AlertCircle, RefreshCw, Users, User, Lock, Building2 } from "lucide-react";
 import { KarigariLogo } from "@/components/ui/KarigariLogo";
 import Image from "next/image";
 import { LogisticsMap } from "@/components/LogisticsMap";
 
 export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState<'demands' | 'tracking'>('demands');
-  const [quoteState, setQuoteState] = useState<'pending' | 'quoted' | 'accepted'>('accepted');
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [postTab, setPostTab] = useState<'general' | 'instructions' | 'photo'>('general');
+  const [postTab, setPostTab] = useState<'general' | 'instructions' | 'photo' | 'escrow'>('general');
+  
+  // Matchmaking State (1:1 Single Artisan vs. Cluster Aggregation)
+  const [matchType, setMatchType] = useState<'single' | 'cluster'>('cluster');
   
   // Production Tracker State
   const [productionStage, setProductionStage] = useState<number>(3); // 1: Confirmed, 2: Raw Material, 3: Weaving, 4: Quality Check, 5: Dispatched
   const [completedUnits, setCompletedUnits] = useState<number>(35);
-  const totalUnits = 50;
 
   // New Demand Form State
   const [demandForm, setDemandForm] = useState({
@@ -24,6 +25,8 @@ export default function BuyerDashboard() {
     quantity: 50,
     targetPrice: 3800,
     cluster: "Bargarh Weavers Cluster, Odisha",
+    companyName: "Rajesh Retailers Pvt Ltd",
+    gstNumber: "27AABCR1234F1Z5",
     deadline: "2026-10-15",
     // Detailed Artisan Instructions
     dimensions: "5.5 meters length + 0.8 meter unstitched blouse piece",
@@ -34,20 +37,14 @@ export default function BuyerDashboard() {
     referencePhoto: "/ikat_saree.jpg"
   });
 
-  const handleSimulateQuote = () => {
-    setTimeout(() => {
-      setQuoteState('quoted');
-    }, 1200);
-  };
-
-  const handleAcceptQuote = () => {
-    setQuoteState('accepted');
-  };
+  const totalValue = demandForm.quantity * demandForm.targetPrice;
+  const advanceRequired = Math.round(totalValue * 0.40);
+  const totalUnits = demandForm.quantity;
 
   const advanceProduction = () => {
     if (productionStage < 5) {
       setProductionStage(prev => prev + 1);
-      if (productionStage === 3) setCompletedUnits(50);
+      if (productionStage === 3) setCompletedUnits(demandForm.quantity);
     } else {
       setProductionStage(1);
       setCompletedUnits(0);
@@ -55,10 +52,10 @@ export default function BuyerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans pb-16">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-16">
       
       {/* Header */}
-      <header className="px-4 sm:px-8 py-4 bg-white border-b border-gray-200 sticky top-0 z-40 flex items-center justify-between">
+      <header className="px-4 sm:px-8 py-4 bg-white border-b border-gray-200 sticky top-0 z-40 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <KarigariLogo variant="dark" showWordmark={true} size={28} />
           <span className="text-gray-300 font-light text-xl">|</span>
@@ -70,8 +67,10 @@ export default function BuyerDashboard() {
               <Image src="/female_artisan.jpg" alt="Buyer" width={32} height={32} className="object-cover" />
             </div>
             <div className="hidden sm:block">
-              <div className="text-sm font-bold text-gray-900">Rajesh Retailers (Mumbai)</div>
-              <div className="text-[10px] text-gray-500 font-medium">Verified Enterprise Buyer</div>
+              <div className="text-sm font-bold text-gray-900">{demandForm.companyName || "Verified Buyer"}</div>
+              <div className="text-[10px] text-gray-500 font-medium">
+                {demandForm.gstNumber ? `GST: ${demandForm.gstNumber}` : "Retail Buyer"}
+              </div>
             </div>
           </div>
         </div>
@@ -111,11 +110,16 @@ export default function BuyerDashboard() {
                       {productionStage === 5 ? "Dispatched" : "In Production"}
                     </span>
                     <span className="text-xs text-gray-400 font-mono font-bold">REQ-99283-OD</span>
+                    {demandForm.gstNumber && (
+                      <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-100">
+                        GST Verified
+                      </span>
+                    )}
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900">{demandForm.title}</h2>
                   <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-4">
-                    <span className="flex items-center gap-1"><MapPin size={14} className="text-gray-400" /> {demandForm.cluster}</span>
-                    <span className="flex items-center gap-1 font-semibold text-gray-700"><TrendingUp size={14} className="text-green-600" /> Target: ₹{demandForm.targetPrice} / unit</span>
+                    <span className="flex items-center gap-1"><MapPin size={14} className="text-gray-400" /> {demandForm.cluster || "Cluster Direct"}</span>
+                    <span className="flex items-center gap-1 font-semibold text-gray-700"><TrendingUp size={14} className="text-green-600" /> Target: ₹{demandForm.targetPrice} / unit (Total: ₹{totalValue.toLocaleString()})</span>
                   </div>
                 </div>
 
@@ -126,6 +130,24 @@ export default function BuyerDashboard() {
                   >
                     <RefreshCw size={12} /> Advance Stage ({productionStage}/5)
                   </button>
+                </div>
+              </div>
+
+              {/* Matchmaking Mode Badge (2-Tier Logic) */}
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-3 border-b border-emerald-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-emerald-950 flex items-center gap-1.5">
+                    {matchType === 'cluster' ? <Users size={15} className="text-emerald-700" /> : <User size={15} className="text-blue-700" />}
+                    Matchmaking Route:
+                  </span>
+                  <span className="bg-white px-2.5 py-0.5 rounded-md border border-emerald-200 font-bold text-emerald-800">
+                    {matchType === 'cluster' ? 'Cluster Cooperative Pooling (5 Weavers)' : '1:1 Single Artisan Direct'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1 text-[11px] text-emerald-800 font-medium">
+                  <Lock size={12} className="text-emerald-600" />
+                  <span>40% Refundable Advance: <strong>₹{advanceRequired.toLocaleString()}</strong> Locked in Escrow</span>
                 </div>
               </div>
 
@@ -206,7 +228,7 @@ export default function BuyerDashboard() {
                     />
                   </div>
                   <div className="flex justify-between text-[11px] text-gray-500">
-                    <span>⚡ Production Velocity: <strong>4.2 Sarees / Day</strong></span>
+                    <span>⚡ Production Velocity: <strong>4.2 Sarees / Day (Cluster Parallel Looms)</strong></span>
                     <span>Estimated Completion: <strong>5 Days Remaining</strong></span>
                   </div>
                 </div>
@@ -259,16 +281,16 @@ export default function BuyerDashboard() {
                     </div>
                     <div>
                       <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                        Lakshmi Devi <ShieldCheck size={14} className="text-blue-600" />
+                        Lakshmi Devi & Bargarh Cluster Weavers <ShieldCheck size={14} className="text-blue-600" />
                       </div>
-                      <div className="text-xs text-gray-500">Lead Master Weaver • Bargarh Weavers Cooperative (4.9★)</div>
+                      <div className="text-xs text-gray-500">Lead Master Weaver • 5 Active Village Looms (4.9★)</div>
                     </div>
                   </div>
 
                   <div className="text-right">
                     <div className="text-xs text-gray-500 font-medium">Smart Escrow Status:</div>
                     <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 mt-0.5">
-                      40% Advance Disbursed (₹77,000)
+                      40% Advance (₹{advanceRequired.toLocaleString()}) Disbursed on Dispatch
                     </div>
                   </div>
                 </div>
@@ -333,7 +355,7 @@ export default function BuyerDashboard() {
         </div>
       </main>
 
-      {/* POST NEW DEMAND MODAL (With Reference Photo & Custom Instructions) */}
+      {/* POST NEW DEMAND MODAL (4-Tab Flow with 40% Escrow Advance) */}
       {isPostModalOpen && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in-up font-sans">
           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-gray-100">
@@ -346,7 +368,7 @@ export default function BuyerDashboard() {
                 </div>
                 <div>
                   <h2 className="font-serif font-bold text-lg leading-tight">Post Custom B2B Artisan Demand</h2>
-                  <p className="text-xs text-white/70">Upload reference designs and specific artisan execution rules</p>
+                  <p className="text-xs text-white/70">Upload reference designs and lock 40% refundable advance in escrow</p>
                 </div>
               </div>
               <button onClick={() => setIsPostModalOpen(false)} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
@@ -355,31 +377,37 @@ export default function BuyerDashboard() {
             </div>
 
             {/* Modal Tabs */}
-            <div className="flex border-b border-gray-200 bg-white px-6 shrink-0 text-xs font-bold">
+            <div className="flex border-b border-gray-200 bg-white px-6 shrink-0 text-xs font-bold overflow-x-auto">
               <button
                 onClick={() => setPostTab('general')}
-                className={`py-3 px-4 border-b-2 transition-colors ${postTab === 'general' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500'}`}
+                className={`py-3 px-3.5 border-b-2 whitespace-nowrap transition-colors ${postTab === 'general' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500'}`}
               >
-                1. Basic Info & Quantity
+                1. Demand Info
               </button>
               <button
                 onClick={() => setPostTab('instructions')}
-                className={`py-3 px-4 border-b-2 transition-colors ${postTab === 'instructions' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500'}`}
+                className={`py-3 px-3.5 border-b-2 whitespace-nowrap transition-colors ${postTab === 'instructions' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500'}`}
               >
-                2. Artisan Detailed Instructions
+                2. Artisan Instructions
               </button>
               <button
                 onClick={() => setPostTab('photo')}
-                className={`py-3 px-4 border-b-2 transition-colors ${postTab === 'photo' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500'}`}
+                className={`py-3 px-3.5 border-b-2 whitespace-nowrap transition-colors ${postTab === 'photo' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500'}`}
               >
-                3. Reference Design Photo
+                3. Reference Photo
+              </button>
+              <button
+                onClick={() => setPostTab('escrow')}
+                className={`py-3 px-3.5 border-b-2 whitespace-nowrap transition-colors ${postTab === 'escrow' ? 'border-[#1A4731] text-[#1A4731]' : 'border-transparent text-gray-500'}`}
+              >
+                4. 40% Escrow Advance
               </button>
             </div>
 
             {/* Modal Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
               
-              {/* Tab 1: General Info */}
+              {/* Tab 1: General Info & Enterprise Toggle */}
               {postTab === 'general' && (
                 <div className="space-y-4 animate-fade-in-up">
                   <div>
@@ -403,11 +431,12 @@ export default function BuyerDashboard() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Target Cluster</label>
+                      <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Cluster (Optional)</label>
                       <input 
                         type="text" 
                         value={demandForm.cluster} 
                         onChange={(e) => setDemandForm({ ...demandForm, cluster: e.target.value })}
+                        placeholder="Leave blank for 1:1 auto-match"
                         className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-[#1A4731] outline-none"
                       />
                     </div>
@@ -433,6 +462,39 @@ export default function BuyerDashboard() {
                       />
                     </div>
                   </div>
+
+                  {/* Conditional Enterprise Fields if >= 10 units */}
+                  {demandForm.quantity >= 10 ? (
+                    <div className="bg-blue-50/70 p-4 rounded-2xl border border-blue-200 space-y-3">
+                      <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
+                        <Building2 size={16} /> Bulk Commercial Order Details (GST Invoice Required)
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Company / Brand Name</label>
+                          <input 
+                            type="text" 
+                            value={demandForm.companyName}
+                            onChange={(e) => setDemandForm({ ...demandForm, companyName: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-medium"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">GST Number (GSTIN)</label>
+                          <input 
+                            type="text" 
+                            value={demandForm.gstNumber}
+                            onChange={(e) => setDemandForm({ ...demandForm, gstNumber: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 italic">
+                      Single / Boutique demand: GSTIN is optional for small orders under 10 units.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -506,9 +568,37 @@ export default function BuyerDashboard() {
                     </div>
                     <div className="flex-1">
                       <div className="text-xs font-bold text-gray-900">Active Reference: reference_design_ikat.jpg</div>
-                      <div className="text-[11px] text-gray-500">Ready for Gemini Vision authenticity pre-screening</div>
+                      <div className="text-[11px] text-gray-500">Visible to artisans to replicate exact weave motifs</div>
                     </div>
                     <span className="text-xs font-bold text-green-700 bg-green-50 px-2.5 py-1 rounded-md">Attached ✓</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 4: 40% Refundable Escrow Advance */}
+              {postTab === 'escrow' && (
+                <div className="space-y-4 animate-fade-in-up">
+                  <div className="bg-gradient-to-br from-[#1A4731] to-[#0F2D20] text-white p-5 rounded-2xl space-y-3">
+                    <div className="flex justify-between items-center text-xs text-white/80">
+                      <span>Total Estimated Order Value:</span>
+                      <span className="font-mono font-bold text-base text-white">₹{totalValue.toLocaleString()}</span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-sm border-t border-white/20 pt-2 font-bold">
+                      <span className="text-amber-400 flex items-center gap-1.5">
+                        <Lock size={16} /> 40% Refundable Escrow Advance:
+                      </span>
+                      <span className="text-xl font-black text-amber-400 font-mono">₹{advanceRequired.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-2xl border border-gray-200 space-y-2 text-xs text-gray-600">
+                    <div className="flex items-center gap-2 font-bold text-gray-900">
+                      <CheckCircle2 size={16} className="text-green-600" /> 100% Refund Protection
+                    </div>
+                    <p className="leading-relaxed">
+                      Your 40% advance remains safely locked in the RBI-compliant Nodal Escrow account. If no artisan cluster accepts or fulfills your order by the target date, the advance is <strong>100% refunded to your bank account with zero cancellation fees</strong>.
+                    </p>
                   </div>
                 </div>
               )}
@@ -520,16 +610,31 @@ export default function BuyerDashboard() {
               <button onClick={() => setIsPostModalOpen(false)} className="text-xs font-bold text-gray-600 hover:text-gray-900">
                 Cancel
               </button>
-              <button 
-                onClick={() => {
-                  setIsPostModalOpen(false);
-                  setProductionStage(1);
-                  setCompletedUnits(0);
-                }} 
-                className="bg-[#1A4731] hover:bg-[#0F2D20] text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-2"
-              >
-                <Check size={14} /> Submit Demand to Cluster
-              </button>
+              
+              {postTab !== 'escrow' ? (
+                <button 
+                  onClick={() => {
+                    if (postTab === 'general') setPostTab('instructions');
+                    else if (postTab === 'instructions') setPostTab('photo');
+                    else if (postTab === 'photo') setPostTab('escrow');
+                  }} 
+                  className="bg-[#1A4731] hover:bg-[#0F2D20] text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+                >
+                  Next Step <ArrowRight size={14} />
+                </button>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setIsPostModalOpen(false);
+                    setProductionStage(1);
+                    setCompletedUnits(0);
+                    setMatchType(demandForm.cluster || demandForm.quantity >= 10 ? 'cluster' : 'single');
+                  }} 
+                  className="bg-amber-500 hover:bg-amber-400 text-gray-900 px-6 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-2"
+                >
+                  <Lock size={14} /> Pay ₹{advanceRequired.toLocaleString()} Advance & Post Demand
+                </button>
+              )}
             </div>
 
           </div>
