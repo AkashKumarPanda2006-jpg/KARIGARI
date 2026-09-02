@@ -134,9 +134,10 @@ export default function ArtisanDashboard() {
             }))}
           />
 
-          <Link href="/marketplace" className="hidden sm:flex items-center justify-center bg-[#14211B] text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-[#24332C] transition-colors ml-2 shadow-sm border border-[#14211B]/50">
-            Switch to Buyer View
+          <Link href="/artisan/earnings" className="hidden sm:flex items-center justify-center bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-800 transition-colors ml-2 shadow-sm border border-emerald-800">
+            💰 Earnings & Analytics
           </Link>
+
 
           <div 
             className="w-[34px] h-[34px] rounded-full overflow-hidden border border-gray-200 cursor-pointer shadow-sm hover:ring-2 hover:ring-[#24332C] transition-all ml-2"
