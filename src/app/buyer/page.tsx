@@ -5,6 +5,7 @@ import { Package, TrendingUp, Search, Store, ArrowRight, ShieldCheck, MapPin, Tr
 import { KarigariLogo } from "@/components/ui/KarigariLogo";
 import Image from "next/image";
 import { LogisticsMap } from "@/components/LogisticsMap";
+import { formatINR } from "@/lib/formatters";
 
 export default function BuyerDashboard() {
   const [activeTab, setActiveTab] = useState<'demands' | 'tracking'>('demands');
@@ -119,7 +120,7 @@ export default function BuyerDashboard() {
                   <h2 className="text-2xl font-bold text-gray-900">{demandForm.title}</h2>
                   <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-4">
                     <span className="flex items-center gap-1"><MapPin size={14} className="text-gray-400" /> {demandForm.cluster || "Cluster Direct"}</span>
-                    <span className="flex items-center gap-1 font-semibold text-gray-700"><TrendingUp size={14} className="text-green-600" /> Target: ₹{demandForm.targetPrice} / unit (Total: ₹{totalValue.toLocaleString()})</span>
+                    <span className="flex items-center gap-1 font-semibold text-gray-700"><TrendingUp size={14} className="text-green-600" /> Target: ₹{formatINR(demandForm.targetPrice)} / unit (Total: ₹{formatINR(totalValue)})</span>
                   </div>
                 </div>
 
@@ -147,7 +148,7 @@ export default function BuyerDashboard() {
 
                 <div className="flex items-center gap-1 text-[11px] text-emerald-800 font-medium">
                   <Lock size={12} className="text-emerald-600" />
-                  <span>40% Refundable Advance: <strong>₹{advanceRequired.toLocaleString()}</strong> Locked in Escrow</span>
+                  <span>40% Refundable Advance: <strong>₹{formatINR(advanceRequired)}</strong> Locked in Escrow</span>
                 </div>
               </div>
 
@@ -290,7 +291,7 @@ export default function BuyerDashboard() {
                   <div className="text-right">
                     <div className="text-xs text-gray-500 font-medium">Smart Escrow Status:</div>
                     <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 mt-0.5">
-                      40% Advance (₹{advanceRequired.toLocaleString()}) Disbursed on Dispatch
+                      40% Advance (₹{formatINR(advanceRequired)}) Disbursed on Dispatch
                     </div>
                   </div>
                 </div>
@@ -581,14 +582,14 @@ export default function BuyerDashboard() {
                   <div className="bg-gradient-to-br from-[#1A4731] to-[#0F2D20] text-white p-5 rounded-2xl space-y-3">
                     <div className="flex justify-between items-center text-xs text-white/80">
                       <span>Total Estimated Order Value:</span>
-                      <span className="font-mono font-bold text-base text-white">₹{totalValue.toLocaleString()}</span>
+                      <span className="font-mono font-bold text-base text-white">₹{formatINR(totalValue)}</span>
                     </div>
 
                     <div className="flex justify-between items-center text-sm border-t border-white/20 pt-2 font-bold">
                       <span className="text-amber-400 flex items-center gap-1.5">
                         <Lock size={16} /> 40% Refundable Escrow Advance:
                       </span>
-                      <span className="text-xl font-black text-amber-400 font-mono">₹{advanceRequired.toLocaleString()}</span>
+                      <span className="text-xl font-black text-amber-400 font-mono">₹{formatINR(advanceRequired)}</span>
                     </div>
                   </div>
 
@@ -632,7 +633,7 @@ export default function BuyerDashboard() {
                   }} 
                   className="bg-amber-500 hover:bg-amber-400 text-gray-900 px-6 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-2"
                 >
-                  <Lock size={14} /> Pay ₹{advanceRequired.toLocaleString()} Advance & Post Demand
+                  <Lock size={14} /> Pay ₹{formatINR(advanceRequired)} Advance & Post Demand
                 </button>
               )}
             </div>

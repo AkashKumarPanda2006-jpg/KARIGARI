@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, TrendingUp, IndianRupee, ShieldCheck, PieChart as PieIcon, BarChart3, Award, Sparkles, Download, CheckCircle2, ArrowUpRight, Clock, Info } from "lucide-react";
 import { KarigariLogo } from "@/components/ui/KarigariLogo";
 import { useLanguage } from "@/lib/translations";
+import { formatINR } from "@/lib/formatters";
 
 export default function ArtisanEarningsPage() {
   const { t, language } = useLanguage();
@@ -112,7 +113,7 @@ export default function ArtisanEarningsPage() {
                 <IndianRupee size={16} />
               </div>
             </div>
-            <div className="text-2xl font-black text-gray-900">₹{lifetimeStats.grossVolume.toLocaleString()}</div>
+            <div className="text-2xl font-black text-gray-900">₹{formatINR(lifetimeStats.grossVolume)}</div>
             <div className="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
               <ArrowUpRight size={12} /> 74 total verified crafts sold
             </div>
@@ -125,7 +126,7 @@ export default function ArtisanEarningsPage() {
                 <Clock size={16} />
               </div>
             </div>
-            <div className="text-2xl font-black text-blue-700">₹{lifetimeStats.advancesPaid.toLocaleString()}</div>
+            <div className="text-2xl font-black text-blue-700">₹{formatINR(lifetimeStats.advancesPaid)}</div>
             <div className="text-[11px] text-gray-500 font-medium mt-1">
               Disbursed immediately upon dispatch
             </div>
@@ -138,7 +139,7 @@ export default function ArtisanEarningsPage() {
                 <CheckCircle2 size={16} />
               </div>
             </div>
-            <div className="text-2xl font-black text-emerald-700">₹{lifetimeStats.settlementsCleared.toLocaleString()}</div>
+            <div className="text-2xl font-black text-emerald-700">₹{formatINR(lifetimeStats.settlementsCleared)}</div>
             <div className="text-[11px] text-gray-500 font-medium mt-1">
               Credited directly to UPI at delivery
             </div>
@@ -151,7 +152,7 @@ export default function ArtisanEarningsPage() {
                 <Sparkles size={16} />
               </div>
             </div>
-            <div className="text-2xl font-black text-amber-400">+₹{lifetimeStats.middlemanSavings.toLocaleString()}</div>
+            <div className="text-2xl font-black text-amber-400">+₹{formatINR(lifetimeStats.middlemanSavings)}</div>
             <div className="text-[11px] text-white/80 font-medium mt-1">
               Extra income kept vs. 25% middleman rate
             </div>
@@ -275,7 +276,7 @@ export default function ArtisanEarningsPage() {
                           fill="#34D399"
                           fontFamily="sans-serif"
                         >
-                          ₹{item.after.toLocaleString()}
+                          ₹{formatINR(item.after)}
                         </text>
                       </g>
                     )}
@@ -396,7 +397,7 @@ export default function ArtisanEarningsPage() {
 
               <div className="flex items-center justify-between text-xs text-amber-900 font-medium pt-1">
                 <span>Demand Velocity: <strong>{signatureItem.demandVelocity}</strong></span>
-                <span className="font-bold text-amber-800">₹{signatureItem.totalRevenue.toLocaleString()} Generated</span>
+                <span className="font-bold text-amber-800">₹{formatINR(signatureItem.totalRevenue)} Generated</span>
               </div>
             </div>
 
@@ -445,7 +446,7 @@ export default function ArtisanEarningsPage() {
                       </span>
                     </td>
                     <td className="py-4 px-6 font-black text-emerald-700 text-sm">
-                      +₹{tx.amount.toLocaleString()}
+                      +₹{formatINR(tx.amount)}
                     </td>
                     <td className="py-4 px-6 font-mono text-gray-500">{tx.vpa}</td>
                     <td className="py-4 px-6 text-gray-500">{tx.date}</td>

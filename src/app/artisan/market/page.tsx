@@ -7,6 +7,7 @@ import { ArrowLeft, Globe, Package, ChevronRight, Store, DollarSign, CheckCircle
 import { useLanguage } from "@/lib/translations";
 import { KarigariLogo } from "@/components/ui/KarigariLogo";
 import { SocialAdStudioModal } from "@/components/SocialAdStudioModal";
+import { formatINR } from "@/lib/formatters";
 
 export default function MarketPage() {
   const { t, language } = useLanguage();
@@ -204,7 +205,7 @@ export default function MarketPage() {
                     <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-4">
                       <span>Quantity: <strong>{customBuyerDemand.totalQuantity} Sarees</strong></span>
                       <span>Target Price: <strong>₹{customBuyerDemand.unitPrice} / saree</strong></span>
-                      <span className="font-bold text-emerald-800">Total Value: ₹{customBuyerDemand.totalValue.toLocaleString()}</span>
+                      <span className="font-bold text-emerald-800">Total Value: ₹{formatINR(customBuyerDemand.totalValue)}</span>
                     </div>
                   </div>
 
@@ -212,7 +213,7 @@ export default function MarketPage() {
                     <span className="text-[11px] text-amber-800 font-bold block flex items-center gap-1 justify-end">
                       <Lock size={12} /> 40% Escrow Advance
                     </span>
-                    <span className="text-xl font-black text-amber-900">₹{customBuyerDemand.advanceLocked.toLocaleString()}</span>
+                    <span className="text-xl font-black text-amber-900">₹{formatINR(customBuyerDemand.advanceLocked)}</span>
                     <span className="text-[10px] text-gray-500 block">Disbursed to weaver on dispatch</span>
                   </div>
                 </div>
@@ -261,14 +262,14 @@ export default function MarketPage() {
                   
                   {acceptedDemandId === customBuyerDemand.id ? (
                     <div className="bg-emerald-100 text-emerald-800 px-6 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 border border-emerald-300">
-                      <Check size={16} /> Batch Accepted! ₹{customBuyerDemand.advanceLocked.toLocaleString()} Advance Locked to Your Loom
+                      <Check size={16} /> Batch Accepted! ₹{formatINR(customBuyerDemand.advanceLocked)} Advance Locked to Your Loom
                     </div>
                   ) : (
                     <button
                       onClick={() => setAcceptedDemandId(customBuyerDemand.id)}
                       className="w-full sm:w-auto bg-[#24332C] hover:bg-[#14211B] text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
                     >
-                      <Lock size={14} className="text-amber-400" /> Accept Order & Claim ₹{customBuyerDemand.advanceLocked.toLocaleString()} Advance
+                      <Lock size={14} className="text-amber-400" /> Accept Order & Claim ₹{formatINR(customBuyerDemand.advanceLocked)} Advance
                     </button>
                   )}
                 </div>
